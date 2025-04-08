@@ -1,2 +1,2 @@
 # feast-operators
-Charmed Operators for Feast feature store
+This bundle contains Charmed Operators for [Feast](https://feast.dev/) feature store.
