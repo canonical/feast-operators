@@ -25,8 +25,7 @@ class FeastSecretSenderInputs:
 
 
 class FeastSecretSenderComponent(Component):
-    """
-    A Component that renders and sends the feast configuration file
+    """A Component that renders and sends the feast configuration file
     as a K8s Secret over the kubernetes_manifest interface.
 
     Args:
@@ -69,21 +68,17 @@ class FeastSecretSenderComponent(Component):
         rendered_secret = secret_template.render(
             {"feature_store_yaml_b64": rendered_config_b64, "secret_name": context["secret_name"]}
         )
-        logger.info(f"Rendered secret is: {rendered_secret}")
 
         return rendered_secret
 
     def send_configuration(self):
-        """
-        Render the manifests and send the configuration over the relation.
-        """
+        """Render the manifests and send the configuration over the relation."""
         rendered_configuration = self.render_manifests()
         secret_manifests = [KubernetesManifest(rendered_configuration)]
         self._manifests_requirer_wrapper.send_data(secret_manifests)
 
     def get_status(self) -> StatusBase:
-        """
-        Return this component's status based on the presence of the relation and
+        """Return this component's status based on the presence of the relation and
         sending the configuration.
         """
         if not self.charm.model.get_relation(self.relation_name):

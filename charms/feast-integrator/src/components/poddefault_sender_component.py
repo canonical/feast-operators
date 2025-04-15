@@ -12,9 +12,7 @@ PODDEFAULT_FILE = "src/templates/feature_store_poddefault.yaml.j2"
 
 
 class PodDefaultSenderComponent(Component):
-    """
-    A Component that renders and sends the feast configuration PodDefault
-    over the kubernetes_manifest interface.
+    """A Component that renders and sends the feast configuration PodDefault over the kubernetes_manifest interface.
 
     Args:
         charm(CharmBase): the requirer charm
@@ -53,8 +51,7 @@ class PodDefaultSenderComponent(Component):
         )
 
     def get_status(self) -> StatusBase:
-        """
-        Return this component's status based on the presence of the relation and
+        """Return this component's status based on the presence of the relation and
         sending the manifests.
         """
         if not self.charm.model.get_relation(self.relation_name):

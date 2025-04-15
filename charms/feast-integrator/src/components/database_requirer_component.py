@@ -40,8 +40,6 @@ class PostgresRequirerComponent(Component):
         the `database` object. The retrieved data is then logged for debugging purposes,
         and any non-empty data is processed to extract endpoint information, username,
         and password. This processed data is then returned as a dictionary.
-        If no data is retrieved, the unit is set to waiting status and the program
-        exits with a zero status code.
         """
         relations = self.database.fetch_relation_data()
         logger.debug("Got following database data: %s", relations)
@@ -71,10 +69,11 @@ class PostgresRequirerComponent(Component):
             return BlockedStatus(f"Please add the missing relation: {self.relation_name}")
 
         try:
-            self.fetch_relation_data()
-        except (DataInterfacesError, KeyError):
+            data = self.fetch_relation_data()
+            if not data:
+                raise ValueError("Relation data is empty")
+        except (DataInterfacesError, KeyError, ValueError):
             # We need the charms to finish integrating.
             return WaitingStatus(f"Waiting for {self.relation_name} relation data")
         else:
-            logger.info(f"Database {self.relation_name} data: {self.fetch_relation_data()}")
             return ActiveStatus()
