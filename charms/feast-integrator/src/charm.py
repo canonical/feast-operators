@@ -16,11 +16,16 @@ import logging
 
 import ops
 from charmed_kubeflow_chisme.components.charm_reconciler import CharmReconciler
-from charmed_kubeflow_chisme.components.leadership_gate_component import LeadershipGateComponent
+from charmed_kubeflow_chisme.components.leadership_gate_component import (
+    LeadershipGateComponent,
+)
 
 from components.database_requirer_component import PostgresRequirerComponent
 from components.poddefault_sender_component import PodDefaultSenderComponent
-from components.secret_sender_component import FeastSecretSenderComponent, FeastSecretSenderInputs
+from components.secret_sender_component import (
+    FeastSecretSenderComponent,
+    FeastSecretSenderInputs,
+)
 
 logger = logging.getLogger(__name__)
 

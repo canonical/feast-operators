@@ -1,16 +1,20 @@
+"""Reusable Chisme component to manage the requirer side of PostgreSQL relation."""
+
 import logging
 from typing import Dict
 
 from charmed_kubeflow_chisme.components.component import Component
-from charms.data_platform_libs.v0.data_interfaces import DatabaseRequires, DataInterfacesError
+from charms.data_platform_libs.v0.data_interfaces import (
+    DatabaseRequires,
+    DataInterfacesError,
+)
 from ops import ActiveStatus, BlockedStatus, CharmBase, StatusBase, WaitingStatus
 
 logger = logging.getLogger(__name__)
 
 
 class PostgresRequirerComponent(Component):
-    """
-    A Reusable component responsible for handling the relation with PostgreSQL charm.
+    """A Reusable component responsible for handling the relation with PostgreSQL charm.
 
     Args:
         charm(CharmBase): the requirer charm

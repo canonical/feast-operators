@@ -1,3 +1,5 @@
+"""Chisme component to manage the requirer (in this case the sender) of pod-defaults relation."""
+
 from pathlib import Path
 
 from charmed_kubeflow_chisme.components.component import Component
@@ -12,12 +14,15 @@ PODDEFAULT_FILE = "src/templates/feature_store_poddefault.yaml.j2"
 
 
 class PodDefaultSenderComponent(Component):
-    """A Component that renders and sends the feast configuration PodDefault over the kubernetes_manifest interface.
+    """Sends Feast configuration PodDefault via the kubernetes_manifest interface.
+
+    A Component that renders and sends the feast configuration PodDefault over
+    the kubernetes_manifest interface.
 
     Args:
-        charm(CharmBase): the requirer charm
-        context(dict[str, str]): the context of the PodDefault
-        relation_name(str): name of the relation that uses the kubernetes_manifest interface
+        charm (CharmBase): the requirer charm
+        context (dict[str, str]): the context of the PodDefault
+        relation_name (str): name of the relation that uses the kubernetes_manifest interface
     """
 
     def __init__(
@@ -38,6 +43,7 @@ class PodDefaultSenderComponent(Component):
         ]
 
     def create_poddefault_requirer(self):
+        """Create the poddefault manifests and requirer."""
         # Load and render the PodDefault
         poddefault_template = Template(Path(PODDEFAULT_FILE).read_text())
         rendered_poddefault = poddefault_template.render(**self.context)
@@ -51,9 +57,7 @@ class PodDefaultSenderComponent(Component):
         )
 
     def get_status(self) -> StatusBase:
-        """Return this component's status based on the presence of the relation and
-        sending the manifests.
-        """
+        """Return this component's status based on the presence of the relation."""
         if not self.charm.model.get_relation(self.relation_name):
             # We need the user to do 'juju integrate'.
             return BlockedStatus(f"Please add the missing relation: {self.relation_name}")

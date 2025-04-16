@@ -1,3 +1,5 @@
+"""Chisme component to manage the requirer (in this case the sender) of secrets relation."""
+
 import base64
 import dataclasses
 import logging
@@ -25,7 +27,9 @@ class FeastSecretSenderInputs:
 
 
 class FeastSecretSenderComponent(Component):
-    """A Component that renders and sends the feast configuration file
+    """Sends Feast Secret via the kubernetes_manifest interface.
+
+    A Component that renders and sends the feast configuration file
     as a K8s Secret over the kubernetes_manifest interface.
 
     Args:
@@ -45,14 +49,12 @@ class FeastSecretSenderComponent(Component):
         )
 
         self._events_to_observe = [
-            self.charm.on["secrets"].relation_created,
-            self.charm.on["secrets"].relation_broken,
+            self.charm.on[relation_name].relation_created,
+            self.charm.on[relation_name].relation_broken,
         ]
 
     def render_manifests(self) -> str:
-        """
-        Render Feast configuration file and embed it into a K8s Secret manifest.
-        """
+        """Render Feast configuration file and embed it into a K8s Secret manifest."""
         # Get databases context
         context = self._inputs_getter().context
 
@@ -66,7 +68,10 @@ class FeastSecretSenderComponent(Component):
         # Load and render the Kubernetes Secret template
         secret_template = Template(Path(SECRET_FILE).read_text())
         rendered_secret = secret_template.render(
-            {"feature_store_yaml_b64": rendered_config_b64, "secret_name": context["secret_name"]}
+            {
+                "feature_store_yaml_b64": rendered_config_b64,
+                "secret_name": context["secret_name"],
+            }
         )
 
         return rendered_secret
@@ -78,9 +83,7 @@ class FeastSecretSenderComponent(Component):
         self._manifests_requirer_wrapper.send_data(secret_manifests)
 
     def get_status(self) -> StatusBase:
-        """Return this component's status based on the presence of the relation and
-        sending the configuration.
-        """
+        """Return this component's status based on the relation."""
         if not self.charm.model.get_relation(self.relation_name):
             # We need the user to do 'juju integrate'.
             return BlockedStatus(f"Please add the missing relation: {self.relation_name}")
