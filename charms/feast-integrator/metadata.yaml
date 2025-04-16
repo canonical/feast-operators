@@ -1,0 +1,32 @@
+name: feast-integrator
+
+summary: Feast Integrator charm connects the Feast components.
+
+description: |
+  Feast Integrator charm is the center of the Feast bundle
+
+  The charm:
+  1. Owns the Feast store configuration file and sends it to
+  resource-dispatcher to apply it to user namespaces.
+
+  2. Integrates with the registry, offline store, and online store
+  database charms to get the database configurations and use
+  them to render the Feast configuration file. 
+
+  3. Integrates with the Feast UI charm and sends it the store 
+  configuration data.
+
+  Feast Integrator is essential to integrate Feast with Postgresql
+  charms and the Kubeflow bundle. 
+
+requires:
+  offline-store:
+    interface: postgresql_client
+  online-store:
+    interface: postgresql_client
+  registry:
+    interface: postgresql_client
+  secrets:
+    interface: kubernetes_manifest
+  pod-defaults:
+    interface: kubernetes_manifest
