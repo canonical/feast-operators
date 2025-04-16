@@ -5,10 +5,10 @@ output "app_name" {
 
 output "requires" {
   value = {
-    offline_store    = "offline-store",
-    online_store     = "online_store",
-    registry         = "registry",
-    secrets          = "secrets",
-    pod_defaults     = "pod-defaults",
+    offline_store = "offline-store",
+    online_store  = "online_store",
+    registry      = "registry",
+    secrets       = "secrets",
+    pod_defaults  = "pod-defaults",
   }
 }
