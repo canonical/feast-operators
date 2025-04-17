@@ -1,0 +1,16 @@
+apiVersion: kubeflow.org/v1alpha1
+kind: PodDefault
+metadata:
+  name: {{ app_name }}-access-feast
+spec:
+ desc: Allow access to Feast
+ selector:
+   matchLabels:
+     access-feast: "true"
+ volumeMounts:
+   - mountPath: /feast/feature-store.yaml
+     name: feature-store-yaml
+ volumes:
+   - name: feature-store-yaml
+     secret:
+       secretName: {{ secret_name }}

@@ -1,0 +1,30 @@
+project: feast_project
+registry:
+  registry_type: sql
+  path: postgresql://{{registey_user}}:{{registry_password}}@{{registry_host}}:{{registry_port}}/{{registry_database}}
+  cache_ttl_seconds: 60
+  sqlalchemy_config_kwargs:
+      echo: false
+      pool_pre_ping: true
+
+provider: local
+
+offline_store:
+  type: postgres
+  host: {{ offline_store_host }}
+  port: {{ offline_store_port }}
+  database: {{ offline_store_database }}
+  db_schema: public
+  user: {{ offline_store_user }}
+  password: {{ offline_store_password }}
+
+online_store:
+  type: postgres
+  host: {{ online_store_host }}
+  port: {{ online_store_port }}
+  database: {{ online_store_database }}
+  db_schema: public
+  user: {{ online_store_user }}
+  password: {{ online_store_password }}
+
+entity_key_serialization_version: 2
