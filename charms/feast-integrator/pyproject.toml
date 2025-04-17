@@ -44,6 +44,15 @@ coverage = "^7.8.0"
 charmed-kubeflow-chisme = "^0.4.6"
 serialized-data-interface = "^0.7.0"
 
+# integration
+[tool.poetry.group.integration]
+optional = true
+
+[tool.poetry.group.integration.dependencies]
+jubilant = "^0.4.1"
+pytest = "^8.3.5"
+charmed-kubeflow-chisme = "^0.4.6"
+
 [tool.coverage.run]
 branch = true
 
