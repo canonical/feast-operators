@@ -4,12 +4,11 @@
 #
 # Learn more at: https://juju.is/docs/sdk
 
-"""Charm the service.
+"""Feast Integrator charm.
 
-Refer to the following tutorial that will help you
-develop a new k8s charm using the Operator Framework:
-
-https://juju.is/docs/sdk/create-a-minimal-kubernetes-charm
+Feast Integrator charm connects the Feast components.
+The charm integrates with the registry, online store, and offline store databases.
+It then creates the feature store configuration file with the databases connection details.
 """
 
 import logging
@@ -33,7 +32,7 @@ SECRET_NAME = "feature-store-yaml"
 
 
 class FeastIntegratorCharm(ops.CharmBase):
-    """Charm the service."""
+    """A Juju charm for Feast Integrator."""
 
     def __init__(self, framework: ops.Framework):
         super().__init__(framework)
