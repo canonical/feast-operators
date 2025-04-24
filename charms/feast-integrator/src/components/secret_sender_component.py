@@ -1,6 +1,5 @@
 """Chisme component to manage the requirer (in this case the sender) of secrets relation."""
 
-import base64
 import dataclasses
 import logging
 from pathlib import Path
@@ -11,10 +10,7 @@ from charms.resource_dispatcher.v0.resource_dispatcher import (
     KubernetesManifestRequirerWrapper,
 )
 from jinja2 import Template
-from ops import ActiveStatus, BlockedStatus, CharmBase, StatusBase, WaitingStatus
-
-CONFIG_FILE = "src/templates/feature_store.yaml.j2"
-SECRET_FILE = "src/templates/feature_store_secret.yaml.j2"
+from ops import ActiveStatus, BlockedStatus, CharmBase, ErrorStatus, StatusBase, WaitingStatus
 
 logger = logging.getLogger(__name__)
 
@@ -34,14 +30,22 @@ class FeastSecretSenderComponent(Component):
 
     Args:
         charm(CharmBase): the requirer charm
-        context(dict[str, str]): the context of the feast configuration
+        path_to_manifest(Path): Path to the manifest to render
         relation_name(str, Optional): name of the relation that uses
         the kubernetes_manifest interface
     """
 
-    def __init__(self, charm: CharmBase, relation_name: str = "secrets", *args, **kwargs):
+    def __init__(
+        self,
+        charm: CharmBase,
+        path_to_manifest: Path,
+        relation_name: str = "secrets",
+        *args,
+        **kwargs,
+    ):
         super().__init__(charm, relation_name, *args, **kwargs)
         self.charm = charm
+        self.path_to_manifest = path_to_manifest
         self.relation_name = relation_name
 
         self._manifests_requirer_wrapper = KubernetesManifestRequirerWrapper(
@@ -59,20 +63,8 @@ class FeastSecretSenderComponent(Component):
         context = self._inputs_getter().context
 
         # Load and render the Feast config template
-        config_template = Template(Path(CONFIG_FILE).read_text())
-        rendered_config = config_template.render(context)
-
-        # Base64 encode the rendered config
-        rendered_config_b64 = base64.b64encode(rendered_config.encode("utf-8")).decode("utf-8")
-
-        # Load and render the Kubernetes Secret template
-        secret_template = Template(Path(SECRET_FILE).read_text())
-        rendered_secret = secret_template.render(
-            {
-                "feature_store_yaml_b64": rendered_config_b64,
-                "secret_name": context["secret_name"],
-            }
-        )
+        config_template = Template(self.path_to_manifest.read_text())
+        rendered_secret = config_template.render(context)
 
         return rendered_secret
 
@@ -91,6 +83,9 @@ class FeastSecretSenderComponent(Component):
         try:
             self._inputs_getter()
         except Exception as err:
-            return WaitingStatus(f"Database Configuration not provided: {err}")
-        self.send_configuration()
+            return WaitingStatus(f"Configuration not provided: {err}")
+        try:
+            self.send_configuration()
+        except Exception as err:
+            return ErrorStatus(f"Failed to send data on {self.relation_name} relation: {err}")
         return ActiveStatus()

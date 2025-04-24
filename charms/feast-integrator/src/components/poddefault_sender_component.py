@@ -10,8 +10,6 @@ from charms.resource_dispatcher.v0.resource_dispatcher import (
 from jinja2 import Template
 from ops import ActiveStatus, BlockedStatus, CharmBase, StatusBase
 
-PODDEFAULT_FILE = "src/templates/feature_store_poddefault.yaml.j2"
-
 
 class PodDefaultSenderComponent(Component):
     """Sends Feast configuration PodDefault via the kubernetes_manifest interface.
@@ -22,6 +20,7 @@ class PodDefaultSenderComponent(Component):
     Args:
         charm (CharmBase): the requirer charm
         context (dict[str, str]): the context of the PodDefault
+        path_to_manifest(Path): Path to the manifest to render
         relation_name (str): name of the relation that uses the kubernetes_manifest interface
     """
 
@@ -29,12 +28,14 @@ class PodDefaultSenderComponent(Component):
         self,
         charm: CharmBase,
         context: dict[str, str],
+        path_to_manifest: Path,
         relation_name: str = "pod-defaults",
     ):
         super().__init__(charm, relation_name)
-        self.relation_name = relation_name
         self.charm = charm
         self.context = context
+        self.path_to_manifest = path_to_manifest
+        self.relation_name = relation_name
 
         self.create_poddefault_requirer()
         self._events_to_observe = [
@@ -45,7 +46,7 @@ class PodDefaultSenderComponent(Component):
     def create_poddefault_requirer(self):
         """Create the poddefault manifests and requirer."""
         # Load and render the PodDefault
-        poddefault_template = Template(Path(PODDEFAULT_FILE).read_text())
+        poddefault_template = Template(self.path_to_manifest.read_text())
         rendered_poddefault = poddefault_template.render(**self.context)
         self.manifests_items = [KubernetesManifest(rendered_poddefault)]
 

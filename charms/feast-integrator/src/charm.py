@@ -12,6 +12,7 @@ It then creates the feature store configuration file with the databases connecti
 """
 
 import logging
+from pathlib import Path
 
 import ops
 from charmed_kubeflow_chisme.components.charm_reconciler import CharmReconciler
@@ -28,6 +29,8 @@ from components.secret_sender_component import (
 
 logger = logging.getLogger(__name__)
 
+PODDEFAULT_FILE_PATH = Path("src/templates/feature_store_poddefault.yaml.j2")
+SECRET_FILE_PATH = Path("src/templates/feature_store_secret.yaml.j2")
 SECRET_NAME = "feature-store-yaml"
 
 
@@ -73,6 +76,7 @@ class FeastIntegratorCharm(ops.CharmBase):
             component=FeastSecretSenderComponent(
                 charm=self,
                 relation_name="secrets",
+                path_to_manifest=SECRET_FILE_PATH,
                 inputs_getter=lambda: FeastSecretSenderInputs(
                     context={
                         **self.offline_store_requirer.component.fetch_relation_data(),
@@ -93,6 +97,7 @@ class FeastIntegratorCharm(ops.CharmBase):
             component=PodDefaultSenderComponent(
                 charm=self,
                 context={"app_name": self.app.name, "secret_name": SECRET_NAME},
+                path_to_manifest=PODDEFAULT_FILE_PATH,
                 relation_name="pod-defaults",
             ),
             depends_on=[self.secret_sender],
