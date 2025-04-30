@@ -1,5 +1,4 @@
-"""
-Library for sharing Feast store configuration information.
+"""Library for sharing Feast store configuration information.
 
 This library offers a Python API for providing and requesting information about
 Feast feature store configuration.
@@ -16,9 +15,91 @@ Using charmcraft you can:
 charmcraft fetch-lib charms.feast_integrator.v0.feast_store_configuration
 ```
 
-## TODO Using the library as requirer
+## Using the library as requirer
 
-## TODO Using the library as provider
+### Add relation to metadata.yaml
+```yaml
+requires:
+  feast-configuration:
+    interface: feast-configuration
+    limit: 1
+```
+
+### Instantiate the  class in charm.py
+
+```python
+from ops.charm import CharmBase
+from charms.feast_integrator.v0.feast_store_configuration import (
+    FeastStoreConfigurationRequirer,
+    FeastStoreConfigurationRelationError
+)
+
+class RequirerCharm(CharmBase):
+    def __init__(self, *args):
+        self.feast_configuration_requirer = FeastStoreConfigurationRequirer(self)
+        self.framework.observe(self.on.some_event_emitted, self.some_event_function)
+
+    def some_event_function():
+        # use the getter function wherever the info is needed
+        try:
+            feast_configuration_yaml = self.feast_configuration_requirer.get_feature_store_yaml()
+        except FeastStoreConfigurationRelationError as error:
+            "your error handler goes here"
+```
+
+## Using the library as provider
+
+### Add relation to metadata.yaml
+
+```yaml
+provides:
+  feast-configuration:
+    interface: feast-configuration
+    limit: 1
+```
+
+### Instantiate the  class in charm.py
+
+```python
+from ops.charm import CharmBase
+from charms.feast_integrator.v0.feast_store_configuration import (
+FeastStoreConfigurationProvider,
+FeastStoreConfigurationRelationMissingError
+)
+
+class ProviderCharm(CharmBase):
+    def __init__(self, *args, **kwargs):
+        ...
+        self.feast_configuration_provider = FeastStoreConfigurationProvider(
+                self, relation_name=TEST_RELATION_NAME
+            )
+        self.observe(self.on.some_event, self._some_event_handler)
+
+    def _some_event_handler(self, ...):
+        # Create the FeastStoreConfiguration object
+        store_config = FeastStoreConfiguration(
+            registry_user="test_user",
+            registry_password="pass",
+            registry_host="host",
+            registry_port=5432,
+            registry_database="reg_db",
+            offline_store_host="offline_host",
+            offline_store_port=3306,
+            offline_store_database="offline_db",
+            offline_store_user="off_user",
+            offline_store_password="off_pass",
+            online_store_host="online_host",
+            online_store_port=6379,
+            online_store_database="online_db",
+            online_store_user="on_user",
+            online_store_password="on_pass"
+        )
+
+        try:
+            self.feast_configuration_provider.send_data(store_config)
+        except FeastStoreConfigurationRelationMissingError as error:
+            "your error handler goes here"
+```
 
 ## Relation data
 
@@ -27,11 +108,12 @@ The attributes of this dataclass are shared in the relation data bag as a dictio
 """
 
 # The unique Charmhub library identifier, never change it
-from dataclasses import asdict, dataclass
 import logging
+from dataclasses import asdict, dataclass
 from typing import Dict, Optional
-from ops import EventSource, ObjectEvents, RelationEvent, CharmBase, Object
+
 import yaml
+from ops import CharmBase, EventSource, Object, ObjectEvents, RelationEvent
 
 logger = logging.getLogger(__name__)
 
@@ -46,14 +128,16 @@ LIBPATCH = 1
 
 DEFAULT_RELATION_NAME = "feast-configuration"
 
+
 class FeastStoreConfigurationUpdatedEvent(RelationEvent):
     """Indicates the Feast Store Configuration data was updated."""
 
 
-class FeastStoreConfigurationInfoEvents(ObjectEvents):
+class FeastStoreConfigurationEvents(ObjectEvents):
     """Events for the Feast Store Configuration library."""
 
     updated = EventSource(FeastStoreConfigurationUpdatedEvent)
+
 
 class FeastStoreConfigurationRelationError(Exception):
     """Base exception class for any relation error handled by this library."""
@@ -76,14 +160,14 @@ class FeastStoreConfigurationRelationDataMissingError(FeastStoreConfigurationRel
         self.message = f"No data found in relation {relation_name} data bag."
         super().__init__(self.message)
 
+
 @dataclass
 class FeastStoreConfiguration:
-    """
-    Configuration parameters for generating a Feast feature store.
+    """Configuration parameters for generating a Feast feature store.
 
     This dataclass captures all dynamic, parameterizable values used in the
-    Feast store configuration template. These values are typically substituted into 
-    the YAML template at runtime or during deployment to configure connections 
+    Feast store configuration template. These values are typically substituted into
+    the YAML template at runtime or during deployment to configure connections
     to the registry, online store, and offline store.
 
     Attributes:
@@ -105,6 +189,7 @@ class FeastStoreConfiguration:
         online_store_user (str): Username for the online store.
         online_store_password (str): Password for the online store user.
     """
+
     # Registry configuration
     registry_user: str
     registry_password: str
@@ -126,33 +211,28 @@ class FeastStoreConfiguration:
     online_store_user: str
     online_store_password: str
 
+
 class FeastStoreConfigurationProvider(Object):
-    """
-    Implement the Provider end of the Feast Configuration relation.
+    """Implement the Provider end of the Feast Configuration relation.
 
     Attributes:
         charm (CharmBase): the requirer application
         relation_name (str, optional): the name of the relation
     """
 
-    on = FeastStoreConfigurationInfoEvents()
+    on = FeastStoreConfigurationEvents()
 
-    def __init__(self,
-                 charm: CharmBase,
-                 relation_name: Optional[str] = DEFAULT_RELATION_NAME,
-                 ):
+    def __init__(
+        self,
+        charm: CharmBase,
+        relation_name: Optional[str] = DEFAULT_RELATION_NAME,
+    ):
         super().__init__(charm, relation_name)
         self.charm = charm
         self.relation_name = relation_name
 
-        self.framework.observe(self.charm.on.leader_elected, self.send_data)
-
-        self.framework.observe(self.charm.on[self.relation_name].relation_created, self.send_data)
-
-    def send_data(self,
-                  store_configuration: FeastStoreConfiguration):
-        """
-        Update the relation data bag with data from a Store Configuration.
+    def send_data(self, store_configuration: FeastStoreConfiguration):
+        """Update the relation data bag with data from a Store Configuration.
 
         Args:
             store_configuration (StoreConfiguration): the Feast store configuration object
@@ -165,17 +245,20 @@ class FeastStoreConfigurationProvider(Object):
             )
             return
 
-        relations = self.charm.model.relations[self.relation_name]
+        relation = self.model.get_relation(self.relation_name)
+
+        if not relation:
+            raise FeastStoreConfigurationRelationMissingError()
+
+        relation_data = {k: str(v) for k, v in asdict(store_configuration).items()}
 
         # Update relation data
-        for relation in relations:
-            relation.data[self.charm.app].update(
-                asdict(store_configuration)
-            )
+        logger.info(f"Sending data {relation_data}")
+        relation.data[self.charm.app].update(relation_data)
+
 
 class FeastStoreConfigurationRequirer(Object):
-    """
-    Implement the Requirer end of the Feast Configuration relation.
+    """Implement the Requirer end of the Feast Configuration relation.
 
     Attributes:
         charm (CharmBase): the requirer application
@@ -187,8 +270,7 @@ class FeastStoreConfigurationRequirer(Object):
         self.relation_name = relation_name
 
     def get_feature_store_yaml(self):
-        """
-        Generate the Feast feature_store.yaml content from a FeastConfiguration instance.
+        """Generate the Feast feature_store.yaml content from a FeastConfiguration instance.
 
         Args:
             config (FeastConfiguration): The configuration values to populate the YAML.
@@ -200,7 +282,6 @@ class FeastStoreConfigurationRequirer(Object):
             StoreConfigurationRelationDataMissingError if data is missing
             StoreConfigurationRelationMissingError: if there is no related application
         """
-
         relation = self.model.get_relation(self.relation_name)
 
         if not relation:
@@ -225,13 +306,13 @@ class FeastStoreConfigurationRequirer(Object):
                 "sqlalchemy_config_kwargs": {
                     "echo": False,
                     "pool_pre_ping": True,
-                }
+                },
             },
             "provider": "local",
             "offline_store": {
                 "type": "postgres",
                 "host": config.offline_store_host,
-                "port": config.offline_store_port,
+                "port": int(config.offline_store_port),
                 "database": config.offline_store_database,
                 "db_schema": "public",
                 "user": config.offline_store_user,
@@ -240,7 +321,7 @@ class FeastStoreConfigurationRequirer(Object):
             "online_store": {
                 "type": "postgres",
                 "host": config.online_store_host,
-                "port": config.online_store_port,
+                "port": int(config.online_store_port),
                 "database": config.online_store_database,
                 "db_schema": "public",
                 "user": config.online_store_user,
