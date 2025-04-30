@@ -16,9 +16,9 @@ Using charmcraft you can:
 charmcraft fetch-lib charms.feast_integrator.v0.feast_store_configuration
 ```
 
-## Using the library as requirer
+## TODO Using the library as requirer
 
-## Using the library as provider
+## TODO Using the library as provider
 
 ## Relation data
 
@@ -30,7 +30,7 @@ The attributes of this dataclass are shared in the relation data bag as a dictio
 from dataclasses import asdict, dataclass
 import logging
 from typing import Dict, Optional
-from ops import EventSource, ObjectEvents, RelationEvent, CharmBase
+from ops import EventSource, ObjectEvents, RelationEvent, CharmBase, Object
 import yaml
 
 logger = logging.getLogger(__name__)
@@ -126,7 +126,7 @@ class FeastStoreConfiguration:
     online_store_user: str
     online_store_password: str
 
-class FeastStoreConfigurationProvider():
+class FeastStoreConfigurationProvider(Object):
     """
     Implement the Provider end of the Feast Configuration relation.
 
@@ -145,13 +145,9 @@ class FeastStoreConfigurationProvider():
         self.charm = charm
         self.relation_name = relation_name
 
-        self.framework.observe(
-            self.charm.on[self._relation_name].relation_changed, self._on_relation_changed
-        )
+        self.framework.observe(self.charm.on.leader_elected, self.send_data)
 
-        self.framework.observe(
-            self.charm.on[self._relation_name].relation_broken, self._on_relation_broken
-        )
+        self.framework.observe(self.charm.on[self.relation_name].relation_created, self.send_data)
 
     def send_data(self,
                   store_configuration: FeastStoreConfiguration):
@@ -177,7 +173,7 @@ class FeastStoreConfigurationProvider():
                 asdict(store_configuration)
             )
 
-class FeastStoreConfigurationRequirer():
+class FeastStoreConfigurationRequirer(Object):
     """
     Implement the Requirer end of the Feast Configuration relation.
 
