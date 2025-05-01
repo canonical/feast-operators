@@ -51,7 +51,7 @@ parts:
     source: .
     after:
       - poetry-deps
-    poetry-export-extra-args: ['--only', 'main,charm-libs']
+    poetry-export-extra-args: ['--only', 'main']
     override-build: |
       craftctl default
       # Include requirements.txt in *.charm artifact for easier debugging
