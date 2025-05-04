@@ -70,15 +70,13 @@ FeastStoreConfigurationRelationMissingError
 class ProviderCharm(CharmBase):
     def __init__(self, *args, **kwargs):
         ...
-        self.feast_configuration_provider = FeastStoreConfigurationProvider(
-                self, relation_name=TEST_RELATION_NAME
-            )
+        self.feast_configuration_provider = FeastStoreConfigurationProvider(self)
         self.observe(self.on.some_event, self._some_event_handler)
 
     def _some_event_handler(self, ...):
         # Create the FeastStoreConfiguration object
         store_config = FeastStoreConfiguration(
-            registry_user="test_user",
+            registry_user="my_user",
             registry_password="pass",
             registry_host="host",
             registry_port=5432,
