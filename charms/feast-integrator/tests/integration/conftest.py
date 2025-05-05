@@ -9,9 +9,9 @@ def juju(request: pytest.FixtureRequest):
     keep_models = bool(request.config.getoption("--keep-models"))
     model_name = request.config.getoption("--model")
 
-    def print_debug_log(juju_instance):
+    def print_debug_log(juju_instance: jubilant.Juju):
         if request.session.testsfailed:
-            print(f"[DEBUG] Fetching debug log for model: {juju_instance.model_name}")
+            print(f"[DEBUG] Fetching debug log for model: {juju_instance.model}")
             log = juju_instance.debug_log(limit=1000)
             print(log, end="")
 
