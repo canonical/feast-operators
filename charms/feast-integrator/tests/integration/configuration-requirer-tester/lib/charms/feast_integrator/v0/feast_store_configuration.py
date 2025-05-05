@@ -147,7 +147,9 @@ class FeastStoreConfigurationRelationMissingError(FeastStoreConfigurationRelatio
     """Exception to raise when the relation is missing on either end."""
 
     def __init__(self, relation_name):
-        self.message = f"Missing relation with name {relation_name} with a store configuration provider."
+        self.message = (
+            f"Missing relation with name {relation_name} with a store configuration provider."
+        )
         super().__init__(self.message)
 
 
@@ -158,12 +160,14 @@ class FeastStoreConfigurationRelationDataMissingError(FeastStoreConfigurationRel
         self.message = f"No data found in relation {relation_name} data bag."
         super().__init__(self.message)
 
+
 class FeastStoreConfigurationDataInvalidError(Exception):
     """Exception to raise when the data in the relation data bag has incorrect format."""
 
     def __init__(self, error):
         self.message = f"Data format for FeastStoreConfiguration has incorrect format: {error}."
         super().__init__(self.message)
+
 
 @dataclass
 class FeastStoreConfiguration:
