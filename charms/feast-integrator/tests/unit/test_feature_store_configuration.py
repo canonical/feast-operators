@@ -8,6 +8,7 @@ from lib.charms.feast_integrator.v0.feast_store_configuration import (
     FeastStoreConfigurationDataInvalidError,
     FeastStoreConfigurationProvider,
     FeastStoreConfigurationRequirer,
+    FeastStoreConfigurationUpdatedEvent,
 )
 
 TEST_RELATION_NAME = "test-relation"
@@ -229,3 +230,19 @@ def test_feast_store_config_final_type_check_failure():
         FeastStoreConfiguration(**invalid_data)
 
     assert "registry_port must be of type int" in str(exc_info.value)
+
+
+@pytest.mark.parametrize("event_name", ["relation_changed", "relation_broken"])
+def test_requirer_relation_event_emits_updated_event(event_name, requirer_context):
+    """Test that relation changed and broken events emit FeastStoreConfigurationUpdatedEvent."""
+    # GIVEN the provider charm has a relation with the test relation name
+    relation = Relation(endpoint=TEST_RELATION_NAME, interface=TEST_INTERFACE_NAME)
+    state_in = State(leader=True, relations={relation})
+
+    # WHEN the corresponding event is called
+    event_handler = getattr(requirer_context.on, event_name)
+    requirer_context.run(event_handler(relation=relation), state_in)
+
+    # THEN 2 events are emitted, the second being FeastStoreConfigurationUpdatedEvent
+    assert len(requirer_context.emitted_events) == 2
+    assert isinstance(requirer_context.emitted_events[1], FeastStoreConfigurationUpdatedEvent)
