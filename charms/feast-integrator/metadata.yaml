@@ -30,3 +30,8 @@ requires:
     interface: kubernetes_manifest
   pod-defaults:
     interface: kubernetes_manifest
+
+provides:
+  feast-configuration:
+    interface: feast-configuration
+    limit: 1
