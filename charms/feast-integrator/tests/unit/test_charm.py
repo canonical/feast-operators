@@ -125,3 +125,81 @@ def test_install_database_relations_added(mock_fetch_relation_data, ctx):
 
     # THEN the unit status is set to ActiveStatus
     assert state_out.unit_status == ops.ActiveStatus()
+
+
+@patch("components.database_requirer_component.PostgresRequirerComponent.fetch_relation_data")
+def test_configuration_sender_unexpected_data(mock_fetch_relation_data, ctx):
+    """Test charm goes to blocked when unexpected data is passed to the configuration sender."""
+    # GIVEN that
+    # * the unit is leader
+    # * database and kubernetes_manifest relations are added
+    # * fetch_relation_data returns the db configuration without the expected field prefixes
+
+    # Data is incorrect because the FeastConfiguration expects the fields with the keys having the
+    # database names as prefix e.g. registry_user, registry_port, etc.
+    mock_unexpected_data = {
+        "host": "localhost",
+        "port": 5432,
+        "database": "mydb",
+        "user": "myuser",
+        "password": "mypassword",
+    }
+
+    mock_fetch_relation_data.return_value = mock_unexpected_data
+
+    relations = [
+        testing.Relation(
+            endpoint="offline-store", interface="postgresql_client", remote_app_data={}
+        ),
+        testing.Relation(endpoint="online-store", interface="postgresql_client"),
+        testing.Relation(endpoint="registry", interface="postgresql_client"),
+        testing.Relation(endpoint="secrets", interface="kubernetes_manifest"),
+        testing.Relation(endpoint="pod-defaults", interface="kubernetes_manifest"),
+        testing.Relation(endpoint="feast-configuration", interface="feast_configuration"),
+    ]
+
+    state_in = State(leader=True, relations=relations)
+
+    # WHEN install fires
+    state_out = ctx.run(ctx.on.install(), state_in)
+
+    # THEN the unit status is set to BlockedStatus
+    assert "Unexpected field(s) in relation data" in state_out.unit_status.message
+
+
+@patch("components.database_requirer_component.PostgresRequirerComponent.fetch_relation_data")
+def test_configuration_sender_incomplete_data(mock_fetch_relation_data, ctx):
+    """Test charm goes to blocked when incomplete data is passed to the configuration sender."""
+    # GIVEN that
+    # * the unit is leader
+    # * database and kubernetes_manifest relations are added
+    # * fetch_relation_data returns the db configuration with missing data fields
+
+    mock_incomplete_data = {
+        "registry_host": "localhost",
+        "registry_port": 5432,
+        "registry_database": "mydb",
+        "registry_user": "myuser",
+        "registry_password": "mypassword",
+    }
+
+    mock_fetch_relation_data.return_value = mock_incomplete_data
+
+    relations = [
+        testing.Relation(
+            endpoint="offline-store", interface="postgresql_client", remote_app_data={}
+        ),
+        testing.Relation(endpoint="online-store", interface="postgresql_client"),
+        testing.Relation(endpoint="registry", interface="postgresql_client"),
+        testing.Relation(endpoint="secrets", interface="kubernetes_manifest"),
+        testing.Relation(endpoint="pod-defaults", interface="kubernetes_manifest"),
+        testing.Relation(endpoint="feast-configuration", interface="feast_configuration"),
+    ]
+
+    state_in = State(leader=True, relations=relations)
+
+    # WHEN install fires
+    state_out = ctx.run(ctx.on.install(), state_in)
+
+    # THEN the unit status is set to BlockedStatus
+    assert "Missing required fields" in state_out.unit_status.message
