@@ -99,7 +99,7 @@ jobs:
   build:
     strategy:
       matrix:
-        charm: #TODO remove hard-coding of charm paths  
+        charm: #FIXME remove hard-coding of charm paths  
           - charms/feast-integrator
           - charms/feast-integrator/tests/integration/configuration-requirer-tester
     name: Build charm | ${{ matrix.charm }}
@@ -108,6 +108,7 @@ jobs:
     uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v31.0.1
     with:
       path-to-charm-directory: ${{ matrix.charm }}
+      cache: false #TODO remove when tester charm is added to charmcraftcache
     
   integration:
     name: Integration tests (microk8s)
