@@ -102,7 +102,7 @@ def test_deploy_charm(juju: jubilant.Juju, request):
         trust=True,
     )
 
-    juju.wait(jubilant.all_active)
+    juju.wait(jubilant.all_active, successes=2)
 
 
 RETRY_FOR_THREE_MINUTES = tenacity.Retrying(
@@ -149,7 +149,7 @@ def test_configuration_requirer_charm(juju: jubilant.Juju):
     juju.integrate(f"{CHARM_NAME}:feast-configuration", f"{TESTER_CHARM_NAME}:feast-configuration")
 
     # Requirer charm should be active
-    juju.wait(jubilant.all_active)
+    juju.wait(jubilant.all_active, successes=2)
 
     # Fetch logs
     log_output = juju.debug_log(limit=1000)
