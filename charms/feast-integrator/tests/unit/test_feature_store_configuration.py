@@ -5,6 +5,7 @@ from scenario import JujuLogLine
 
 from lib.charms.feast_integrator.v0.feast_store_configuration import (
     FeastStoreConfiguration,
+    FeastStoreConfigurationDataInvalidError,
     FeastStoreConfigurationProvider,
     FeastStoreConfigurationRequirer,
 )
@@ -203,13 +204,14 @@ def test_provider_send_data_not_leader(provider_context):
     assert relation_data == {}
 
 
-def test_feast_store_configuration_type_validation_failure():
-    """Test that FeastStoreConfiguration raises TypeError when a field has incorrect type."""
+def test_feast_store_configuration_type_incorrect_data_type():
+    """Test that FeastStoreConfiguration raises FeastStoreConfigurationDataInvalidError
+    when a field has incorrect type."""
     # Inject a wrong type (e.g., string instead of int)
     invalid_data = MOCK_CONFIG_DICT.copy()
     invalid_data["registry_port"] = "not-a-port"
 
-    with pytest.raises(TypeError) as exc_info:
+    with pytest.raises(FeastStoreConfigurationDataInvalidError) as exc_info:
         FeastStoreConfiguration(**invalid_data)
 
     assert "registry_port must be int or string representing an int" in str(exc_info.value)
