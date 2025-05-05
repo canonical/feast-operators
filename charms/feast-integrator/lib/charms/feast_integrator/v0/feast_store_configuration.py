@@ -111,7 +111,7 @@ from dataclasses import asdict, dataclass
 from typing import Dict, Optional
 
 import yaml
-from ops import CharmBase, EventSource, Object, ObjectEvents, RelationEvent
+from ops import BoundEvent, CharmBase, EventSource, Object, ObjectEvents, RelationEvent
 
 logger = logging.getLogger(__name__)
 
@@ -146,8 +146,8 @@ class FeastStoreConfigurationRelationError(Exception):
 class FeastStoreConfigurationRelationMissingError(FeastStoreConfigurationRelationError):
     """Exception to raise when the relation is missing on either end."""
 
-    def __init__(self):
-        self.message = "Missing relation with a store configuration provider."
+    def __init__(self, relation_name):
+        self.message = f"Missing relation with name {relation_name} with a store configuration provider."
         super().__init__(self.message)
 
 
@@ -158,6 +158,12 @@ class FeastStoreConfigurationRelationDataMissingError(FeastStoreConfigurationRel
         self.message = f"No data found in relation {relation_name} data bag."
         super().__init__(self.message)
 
+class FeastStoreConfigurationDataInvalidError(Exception):
+    """Exception to raise when the data in the relation data bag has incorrect format."""
+
+    def __init__(self, error):
+        self.message = f"Data format for FeastStoreConfiguration has incorrect format: {error}."
+        super().__init__(self.message)
 
 @dataclass
 class FeastStoreConfiguration:
@@ -220,13 +226,13 @@ class FeastStoreConfiguration:
                         value = int(value)
                         setattr(self, field_name, value)
                     except ValueError:
-                        raise TypeError(
+                        raise FeastStoreConfigurationDataInvalidError(
                             f"{field_name} must be int or string representing an int, got :{value}"
                         )
 
             # Final strict type check after any conversion
             if not isinstance(value, expected_type):
-                raise TypeError(
+                raise FeastStoreConfigurationDataInvalidError(
                     f"{field_name} must be of type {expected_type.__name__}, "
                     f"got {type(value).__name__}"
                 )
@@ -268,7 +274,7 @@ class FeastStoreConfigurationProvider(Object):
         relation = self.model.get_relation(self.relation_name)
 
         if not relation:
-            raise FeastStoreConfigurationRelationMissingError()
+            raise FeastStoreConfigurationRelationMissingError(self.relation_name)
 
         relation_data = {k: str(v) for k, v in asdict(store_configuration).items()}
 
@@ -285,9 +291,28 @@ class FeastStoreConfigurationRequirer(Object):
         relation_name (str, optional): the name of the relation
     """
 
-    def __init__(self, charm, relation_name: Optional[str] = DEFAULT_RELATION_NAME):
+    on = FeastStoreConfigurationEvents()
+
+    def __init__(self, charm: CharmBase, relation_name: Optional[str] = DEFAULT_RELATION_NAME):
         super().__init__(charm, relation_name)
+        self.charm = charm
         self.relation_name = relation_name
+
+        self.framework.observe(
+            self.charm.on[self.relation_name].relation_changed, self._on_relation_changed
+        )
+
+        self.framework.observe(
+            self.charm.on[self.relation_name].relation_broken, self._on_relation_broken
+        )
+
+    def _on_relation_changed(self, event: BoundEvent) -> None:
+        """Handle relation-changed event for this relation."""
+        self.on.updated.emit(event.relation)
+
+    def _on_relation_broken(self, event: BoundEvent) -> None:
+        """Handle relation-broken event for this relation."""
+        self.on.updated.emit(event.relation)
 
     def get_feature_store_yaml(self):
         """Generate the Feast feature_store.yaml content from a FeastConfiguration instance.
@@ -299,18 +324,18 @@ class FeastStoreConfigurationRequirer(Object):
             str: A string representation of the feature_store.yaml file.
 
         Raises:
-            StoreConfigurationRelationDataMissingError if data is missing
-            StoreConfigurationRelationMissingError: if there is no related application
+            FeatureStoreConfigurationRelationDataMissingError if data is missing
+            FeatureStoreConfigurationRelationMissingError: if there is no related application
         """
         relation = self.model.get_relation(self.relation_name)
 
         if not relation:
-            raise FeastStoreConfigurationRelationMissingError()
+            raise FeastStoreConfigurationRelationMissingError(self.relation_name)
 
         relation_data = relation.data[relation.app]
 
         if not relation_data:
-            raise FeastStoreConfigurationRelationDataMissingError()
+            raise FeastStoreConfigurationRelationDataMissingError(self.relation_name)
 
         config = FeastStoreConfiguration(**relation_data)
 
