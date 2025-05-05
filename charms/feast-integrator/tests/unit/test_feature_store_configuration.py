@@ -204,11 +204,11 @@ def test_provider_send_data_not_leader(provider_context):
     assert relation_data == {}
 
 
-def test_feast_store_configuration_type_incorrect_data_type():
+def test_feast_store_configuration_int_incorrect_data_type():
     """Test  FeastStoreConfiguration validation.
 
     Test that FeastStoreConfiguration raises raises FeastStoreConfigurationDataInvalidError
-    when a field has incorrect type.
+    when an int field has incorrect type.
     """
     # Inject a wrong type (e.g., string instead of int)
     invalid_data = MOCK_CONFIG_DICT.copy()
@@ -218,3 +218,14 @@ def test_feast_store_configuration_type_incorrect_data_type():
         FeastStoreConfiguration(**invalid_data)
 
     assert "registry_port must be int or string representing an int" in str(exc_info.value)
+
+
+def test_feast_store_config_final_type_check_failure():
+    """Test that a FeastStoreConfiguration raises an error when a field has the wrong type."""
+    invalid_data = MOCK_CONFIG_DICT.copy()
+    invalid_data["registry_port"] = ["not", "an", "int"]
+
+    with pytest.raises(FeastStoreConfigurationDataInvalidError) as exc_info:
+        FeastStoreConfiguration(**invalid_data)
+
+    assert "registry_port must be of type int" in str(exc_info.value)
