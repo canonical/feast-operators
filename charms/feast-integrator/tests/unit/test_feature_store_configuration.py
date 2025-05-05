@@ -202,9 +202,9 @@ def test_provider_send_data_not_leader(provider_context):
     relation_data = state_out.get_relation(relation.id).local_app_data
     assert relation_data == {}
 
+
 def test_feast_store_configuration_type_validation_failure():
     """Test that FeastStoreConfiguration raises TypeError when a field has incorrect type."""
-
     # Inject a wrong type (e.g., string instead of int)
     invalid_data = MOCK_CONFIG_DICT.copy()
     invalid_data["registry_port"] = "not-a-port"
@@ -212,4 +212,4 @@ def test_feast_store_configuration_type_validation_failure():
     with pytest.raises(TypeError) as exc_info:
         FeastStoreConfiguration(**invalid_data)
 
-    assert "registry_port must be an int or a string representing an int" in str(exc_info.value)
+    assert "registry_port must be int or string representing an int" in str(exc_info.value)

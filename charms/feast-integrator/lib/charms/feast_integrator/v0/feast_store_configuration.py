@@ -221,14 +221,16 @@ class FeastStoreConfiguration:
                         setattr(self, field_name, value)
                     except ValueError:
                         raise TypeError(
-                            f"{field_name} must be an int or a string representing an int, got '{value}'"
+                            f"{field_name} must be int or string representing an int, got :{value}"
                         )
 
             # Final strict type check after any conversion
             if not isinstance(value, expected_type):
                 raise TypeError(
-                    f"{field_name} must be of type {expected_type.__name__}, got {type(value).__name__}"
+                    f"{field_name} must be of type {expected_type.__name__}, "
+                    f"got {type(value).__name__}"
                 )
+
 
 class FeastStoreConfigurationProvider(Object):
     """Implement the Provider end of the Feast Configuration relation.
