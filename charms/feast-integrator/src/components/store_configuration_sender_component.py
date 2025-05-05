@@ -7,6 +7,7 @@ from charmed_kubeflow_chisme.components.component import Component
 from charmed_kubeflow_chisme.exceptions import ErrorWithStatus
 from charms.feast_integrator.v0.feast_store_configuration import (
     FeastStoreConfiguration,
+    FeastStoreConfigurationDataInvalidError,
     FeastStoreConfigurationProvider,
     FeastStoreConfigurationRelationError,
 )
@@ -57,6 +58,10 @@ class StoreConfigurationSenderComponent(Component):
         # Create FeastStoreConfiguration
         try:
             store_configuration = FeastStoreConfiguration(**context)
+        # Catch errors due to validation failure on configuration data tyoes
+        except FeastStoreConfigurationDataInvalidError as e:
+            raise ErrorWithStatus(e.message, BlockedStatus)
+        # Catch errors due to missing or unexpected fields
         except TypeError as e:
             error_msg = str(e)
 
@@ -73,7 +78,7 @@ class StoreConfigurationSenderComponent(Component):
 
             else:
                 raise ErrorWithStatus(
-                    f"Invalid data provided to FeastStoreConfiguration: {error_msg}", BlockedStatus
+                    f"Unexpected data provided to FeastStoreConfiguration: {error_msg}", BlockedStatus
                 ) from e
 
         return store_configuration
