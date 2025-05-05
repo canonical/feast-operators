@@ -209,6 +209,26 @@ class FeastStoreConfiguration:
     online_store_user: str
     online_store_password: str
 
+    def __post_init__(self):
+        for field_name, expected_type in self.__annotations__.items():
+            value = getattr(self, field_name)
+
+            # Convert str to int where expected
+            if expected_type is int:
+                if isinstance(value, str):
+                    try:
+                        value = int(value)
+                        setattr(self, field_name, value)
+                    except ValueError:
+                        raise TypeError(
+                            f"{field_name} must be an int or a string representing an int, got '{value}'"
+                        )
+
+            # Final strict type check after any conversion
+            if not isinstance(value, expected_type):
+                raise TypeError(
+                    f"{field_name} must be of type {expected_type.__name__}, got {type(value).__name__}"
+                )
 
 class FeastStoreConfigurationProvider(Object):
     """Implement the Provider end of the Feast Configuration relation.
@@ -251,7 +271,7 @@ class FeastStoreConfigurationProvider(Object):
         relation_data = {k: str(v) for k, v in asdict(store_configuration).items()}
 
         # Update relation data
-        logger.info(f"Sending data {relation_data}")
+        logger.debug(f"Sending data {relation_data}")
         relation.data[self.charm.app].update(relation_data)
 
 
@@ -310,7 +330,7 @@ class FeastStoreConfigurationRequirer(Object):
             "offline_store": {
                 "type": "postgres",
                 "host": config.offline_store_host,
-                "port": int(config.offline_store_port),
+                "port": config.offline_store_port,
                 "database": config.offline_store_database,
                 "db_schema": "public",
                 "user": config.offline_store_user,
@@ -319,7 +339,7 @@ class FeastStoreConfigurationRequirer(Object):
             "online_store": {
                 "type": "postgres",
                 "host": config.online_store_host,
-                "port": int(config.online_store_port),
+                "port": config.online_store_port,
                 "database": config.online_store_database,
                 "db_schema": "public",
                 "user": config.online_store_user,
