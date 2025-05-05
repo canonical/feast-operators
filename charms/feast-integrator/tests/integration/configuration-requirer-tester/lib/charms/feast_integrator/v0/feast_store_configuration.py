@@ -45,6 +45,8 @@ class RequirerCharm(CharmBase):
             feast_configuration_yaml = self.feast_configuration_requirer.get_feature_store_yaml()
         except FeastStoreConfigurationRelationError as error:
             "your error handler goes here"
+        except FeastStoreConfigurationDataInvalidError as error:
+            "your error handler goes here"
 ```
 
 ## Using the library as provider
@@ -75,23 +77,26 @@ class ProviderCharm(CharmBase):
 
     def _some_event_handler(self, ...):
         # Create the FeastStoreConfiguration object
-        store_config = FeastStoreConfiguration(
-            registry_user="my_user",
-            registry_password="pass",
-            registry_host="host",
-            registry_port=5432,
-            registry_database="reg_db",
-            offline_store_host="offline_host",
-            offline_store_port=3306,
-            offline_store_database="offline_db",
-            offline_store_user="off_user",
-            offline_store_password="off_pass",
-            online_store_host="online_host",
-            online_store_port=6379,
-            online_store_database="online_db",
-            online_store_user="on_user",
-            online_store_password="on_pass"
-        )
+        try:
+            store_config = FeastStoreConfiguration(
+                registry_user="my_user",
+                registry_password="pass",
+                registry_host="host",
+                registry_port=5432,
+                registry_database="reg_db",
+                offline_store_host="offline_host",
+                offline_store_port=3306,
+                offline_store_database="offline_db",
+                offline_store_user="off_user",
+                offline_store_password="off_pass",
+                online_store_host="online_host",
+                online_store_port=6379,
+                online_store_database="online_db",
+                online_store_user="on_user",
+                online_store_password="on_pass"
+            )
+        except FeastStoreConfigurationDataInvalidError as e:
+            "your error handler goes here"
 
         try:
             self.feast_configuration_provider.send_data(store_config)
@@ -341,7 +346,12 @@ class FeastStoreConfigurationRequirer(Object):
         if not relation_data:
             raise FeastStoreConfigurationRelationDataMissingError(self.relation_name)
 
-        config = FeastStoreConfiguration(**relation_data)
+        try:
+            config = FeastStoreConfiguration(**relation_data)
+        except FeastStoreConfigurationDataInvalidError as e:
+            raise FeastStoreConfigurationDataInvalidError(
+                f"Failed to create FeastStoreConfiguration: {e.message}"
+            )
 
         yaml_dict: Dict = {
             "project": "feast_project",
