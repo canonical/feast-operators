@@ -58,7 +58,7 @@ class StoreConfigurationSenderComponent(Component):
         # Create FeastStoreConfiguration
         try:
             store_configuration = FeastStoreConfiguration(**context)
-        # Catch errors due to validation failure on configuration data tyoes
+        # Catch errors due to validation failure on configuration data types
         except FeastStoreConfigurationDataInvalidError as e:
             raise ErrorWithStatus(e.message, BlockedStatus)
         # Catch errors due to missing or unexpected fields
@@ -78,7 +78,8 @@ class StoreConfigurationSenderComponent(Component):
 
             else:
                 raise ErrorWithStatus(
-                    f"Unexpected data provided to FeastStoreConfiguration: {error_msg}", BlockedStatus
+                    f"Unexpected data provided to FeastStoreConfiguration: {error_msg}",
+                    BlockedStatus,
                 ) from e
 
         return store_configuration
