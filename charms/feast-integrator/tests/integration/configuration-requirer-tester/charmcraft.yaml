@@ -8,9 +8,8 @@ summary: |
 description: |
   Charm to test receiving configuration from Feast Configuration relation.
 
-base: ubuntu@24.04
 platforms:
-  amd64:
+  ubuntu@24.04:amd64:
 
 parts:
   charm:
