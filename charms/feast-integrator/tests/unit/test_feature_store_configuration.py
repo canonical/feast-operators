@@ -205,8 +205,11 @@ def test_provider_send_data_not_leader(provider_context):
 
 
 def test_feast_store_configuration_type_incorrect_data_type():
-    """Test that FeastStoreConfiguration raises FeastStoreConfigurationDataInvalidError
-    when a field has incorrect type."""
+    """Test  FeastStoreConfiguration validation.
+
+    Test that FeastStoreConfiguration raises raises FeastStoreConfigurationDataInvalidError
+    when a field has incorrect type.
+    """
     # Inject a wrong type (e.g., string instead of int)
     invalid_data = MOCK_CONFIG_DICT.copy()
     invalid_data["registry_port"] = "not-a-port"
