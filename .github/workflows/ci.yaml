@@ -99,7 +99,9 @@ jobs:
   build:
     strategy:
       matrix:
-        charm: ${{ fromJSON(needs.get-charm-paths-channel.outputs.charm-paths) }}
+        charm: #TODO remove hard-coding of charm paths  
+          - charms/feast-integrator
+          - charms/feast-integrator/tests/integration/configuration-requirer-tester
     name: Build charm | ${{ matrix.charm }}
     needs:
       - get-charm-paths-channel

@@ -1,0 +1,22 @@
+name: configuration-requirer-tester
+
+type: charm
+
+summary: |
+  Charm to test receiving configuration from Feast Configuration relation.
+
+description: |
+  Charm to test receiving configuration from Feast Configuration relation.
+
+base: ubuntu@24.04
+platforms:
+  amd64:
+
+parts:
+  charm:
+    charm-python-packages: [setuptools, pip]
+
+requires:
+  feast-configuration:
+    interface: feast-configuration
+    limit: 1
