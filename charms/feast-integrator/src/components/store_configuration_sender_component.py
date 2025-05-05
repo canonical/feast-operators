@@ -94,15 +94,15 @@ class StoreConfigurationSenderComponent(Component):
 
     def get_status(self) -> StatusBase:
         """Return this component's status based on the relation."""
+        if not self.charm.model.get_relation(self.relation_name):
+            logger.warning(f"Relation {self.relation_name} not added, UI is not integrated.")
+            return ActiveStatus()
+
         # Check that configuration context is available in the input
         try:
             self._inputs_getter()
         except Exception as err:
             return WaitingStatus(f"Store configuration not provided: {err}")
-
-        if not self.charm.model.get_relation(self.relation_name):
-            logger.warning(f"Relation {self.relation_name} not added, UI is not integrated.")
-            return ActiveStatus()
 
         # Try to send the store configuration
         try:
