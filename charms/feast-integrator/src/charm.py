@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 # Copyright 2025 Canonical Ltd.
 # See LICENSE file for licensing details.
-#
-# Learn more at: https://juju.is/docs/sdk
 
 """Feast Integrator charm.
 
@@ -25,6 +23,10 @@ from components.poddefault_sender_component import PodDefaultSenderComponent
 from components.secret_sender_component import (
     FeastSecretSenderComponent,
     FeastSecretSenderInputs,
+)
+from components.store_configuration_sender_component import (
+    StoreConfigurationSenderComponent,
+    StoreConfigurationSenderInputs,
 )
 
 logger = logging.getLogger(__name__)
@@ -101,6 +103,24 @@ class FeastIntegratorCharm(ops.CharmBase):
                 relation_name="pod-defaults",
             ),
             depends_on=[self.secret_sender],
+        )
+
+        self.store_configuration_sender = self.charm_reconciler.add(
+            component=StoreConfigurationSenderComponent(
+                charm=self,
+                inputs_getter=lambda: StoreConfigurationSenderInputs(
+                    context={
+                        **self.offline_store_requirer.component.fetch_relation_data(),
+                        **self.online_store_requirer.component.fetch_relation_data(),
+                        **self.registry_requirer.component.fetch_relation_data(),
+                    }
+                ),
+            ),
+            depends_on=[
+                self.offline_store_requirer,
+                self.online_store_requirer,
+                self.registry_requirer,
+            ],
         )
 
         self.charm_reconciler.install_default_event_handlers()

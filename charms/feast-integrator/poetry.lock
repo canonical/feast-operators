@@ -1455,7 +1455,7 @@ version = "2.20.0"
 description = "The Python library behind great charms"
 optional = false
 python-versions = ">=3.8"
-groups = ["main", "integration", "unit"]
+groups = ["main", "charm-libs", "integration", "unit"]
 files = [
     {file = "ops-2.20.0-py3-none-any.whl", hash = "sha256:94791a4b45f00c6902494a4934480c85947880b27f5ebf3a0ec32e8cc6279c99"},
     {file = "ops-2.20.0.tar.gz", hash = "sha256:be1dcfd0bb748839fbc200bbd073a6acf9648401c3729db22d8594ebb4301e05"},
@@ -1938,7 +1938,7 @@ version = "6.0.2"
 description = "YAML parser and emitter for Python"
 optional = false
 python-versions = ">=3.8"
-groups = ["main", "integration", "unit"]
+groups = ["main", "charm-libs", "integration", "unit"]
 files = [
     {file = "PyYAML-6.0.2-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:0a9a2848a5b7feac301353437eb7d5957887edbf81d56e903999a75a3d743086"},
     {file = "PyYAML-6.0.2-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:29717114e51c84ddfba879543fb232a6ed60086602313ca38cce623c1d62cfbf"},
@@ -2474,7 +2474,7 @@ version = "1.8.0"
 description = "WebSocket client for Python with low level API options"
 optional = false
 python-versions = ">=3.8"
-groups = ["main", "integration", "unit"]
+groups = ["main", "charm-libs", "integration", "unit"]
 files = [
     {file = "websocket_client-1.8.0-py3-none-any.whl", hash = "sha256:17b44cc997f5c498e809b22cdf2d9c7a9e71c02c8cc2b6c56e7c2d1239bfa526"},
     {file = "websocket_client-1.8.0.tar.gz", hash = "sha256:3239df9f44da632f96012472805d40a23281a991027ce11d2f45a6f24ac4c3da"},
@@ -2767,4 +2767,4 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "c1ff0a1ff6474ae4b0188e09c09d9be4b1ccbceface526f0898c1525955e6949"
+content-hash = "22ac77df13506aaaed4d4e08269653c76676b5d08bb2e8d3afa27ef83e53d3bb"
