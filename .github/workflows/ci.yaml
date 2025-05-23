@@ -56,7 +56,7 @@ jobs:
     runs-on: ubuntu-24.04
     strategy:
       matrix:
-        charm: [feast-integrator]
+        charm: [feast-integrator, feast-ui]
 
     steps:
     - name: Check out code
@@ -73,7 +73,7 @@ jobs:
     runs-on: ubuntu-24.04
     strategy:
       matrix:
-        charm: [feast-integrator]
+        charm: [feast-integrator, feast-ui]
 
     steps:
     - name: Check out code
@@ -102,6 +102,7 @@ jobs:
         charm: #FIXME remove hard-coding of charm paths  
           - charms/feast-integrator
           - charms/feast-integrator/tests/integration/configuration-requirer-tester
+          - charms/feast-ui
     name: Build charm | ${{ matrix.charm }}
     needs:
       - get-charm-paths-channel
@@ -117,7 +118,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        charm: [feast-integrator]
+        charm: [feast-integrator, feast-ui]
 
     steps:
       - name: Check out code
