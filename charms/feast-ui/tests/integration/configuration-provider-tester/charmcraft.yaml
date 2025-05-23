@@ -1,0 +1,21 @@
+name: configuration-provider-tester
+
+type: charm
+
+summary: |
+  Charm to test receiving configuration from Feast Configuration relation.
+
+description: |
+  Charm to test receiving configuration from Feast Configuration relation.
+
+platforms:
+  ubuntu@24.04:amd64:
+
+parts:
+  charm:
+    charm-python-packages: [setuptools, pip]
+
+provides:
+  feast-configuration:
+    interface: feast-configuration
+    limit: 1
