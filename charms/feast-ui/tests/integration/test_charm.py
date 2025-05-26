@@ -75,6 +75,7 @@ def test_deploy_charm(juju: jubilant.Juju, request):
 
     juju.wait(jubilant.all_active, successes=2)
 
+
 def charm_path_from_root(charm_dir_name: str) -> Path:
     """Return absolute path to the built charm file for a given charm directory name."""
     # Step up from `charms/feast-ui/tests/integration/` → to repo root
@@ -86,7 +87,6 @@ def charm_path_from_root(charm_dir_name: str) -> Path:
 
     assert charms, f"No .charm file found for {charm_dir_name} in {charm_dir}"
     assert len(charms) == 1, (
-        f"Multiple charm files found for {charm_dir_name} in {charm_dir}, "
-        "please remove duplicates"
+        f"Multiple charm files found for {charm_dir_name} in {charm_dir}, please remove duplicates"
     )
     return charms[0].absolute()
