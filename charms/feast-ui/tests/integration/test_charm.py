@@ -27,10 +27,7 @@ def test_deploy_charm(juju: jubilant.Juju, request):
         resources={"oci-image": IMAGE},
     )
 
-    juju.deploy(
-        charm=FEAST_INTEGRATOR_CHARM_NAME,
-        channel="latest/edge",
-    )
+    juju.deploy(charm=charm_path_from_root(FEAST_INTEGRATOR_CHARM_NAME))
 
     juju.wait(lambda status: status.apps[CHARM_NAME].is_blocked)
 
@@ -78,34 +75,18 @@ def test_deploy_charm(juju: jubilant.Juju, request):
 
     juju.wait(jubilant.all_active, successes=2)
 
+def charm_path_from_root(charm_dir_name: str) -> Path:
+    """Return absolute path to the built charm file for a given charm directory name."""
+    # Step up from `charms/feast-ui/tests/integration/` → to repo root
+    repo_root = Path(__file__).resolve().parents[4]
+    charm_dir = repo_root / "charms" / charm_dir_name
 
-# def test_feast_ui_has_feature_store_file(juju: jubilant.Juju):
-#     """Verify the feast-ui container has /home/ubuntu/feature_store.yaml."""
-#     unit_name = f"{CHARM_NAME}/0"
-#     container_name = "feast-ui-operator"
+    # Find the built charm file (*.charm) inside that directory
+    charms = list(charm_dir.glob(f"{charm_dir_name}_*.charm"))
 
-#     for attempt in RETRY:
-#         with attempt:
-#             output = juju.ssh(
-#                 target=unit_name,
-#                 container=container_name,
-#                 command="cat",
-#                 args="/home/ubuntu/feature_store.yaml",
-#             )
-#             assert "registry:" in output,
-# "Expected 'registry:' key in feature_store.yaml content"
-
-
-# # Helpers
-
-# def charm_path(name: str) -> Path:
-#     """Return full absolute path to given charm located in the directory under the test file."""
-#     test_file_dir = Path(__file__).parent
-#     charm_dir = test_file_dir / name
-#     charms = list(charm_dir.glob(f"{name}_*.charm"))
-
-#     assert charms, f"{name}_*.charm not found in {charm_dir}"
-#     assert len(charms) == 1, (
-#         f"Multiple .charm files for {name} found in {charm_dir}, unsure which to use"
-#     )
-#     return charms[0].absolute()
+    assert charms, f"No .charm file found for {charm_dir_name} in {charm_dir}"
+    assert len(charms) == 1, (
+        f"Multiple charm files found for {charm_dir_name} in {charm_dir}, "
+        "please remove duplicates"
+    )
+    return charms[0].absolute()
