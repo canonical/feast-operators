@@ -85,8 +85,9 @@ class FeastUICharm(CharmBase):
                 relation_name="ingress",
                 data_to_send={
                     "prefix": "/feast",
-                    "rewrite": "/feast",
+                    "rewrite": "/",
                     "service": self.model.app.name,
+                    "namespace": self.model.name,
                     "port": HTTP_PORT,
                 },
             ),
