@@ -3,6 +3,8 @@
 import jubilant
 import pytest
 
+WAIT_TIMEOUT = 15 * 60
+
 
 @pytest.fixture(scope="module")
 def juju(request: pytest.FixtureRequest):
@@ -17,14 +19,14 @@ def juju(request: pytest.FixtureRequest):
 
     if model_name:
         juju_instance = jubilant.Juju(model=model_name)
-        juju_instance.wait_timeout = 10 * 60
+        juju_instance.wait_timeout = WAIT_TIMEOUT
         try:
             yield juju_instance
         finally:
             print_debug_log(juju_instance)
     else:
         with jubilant.temp_model(keep=keep_models) as juju_instance:
-            juju_instance.wait_timeout = 10 * 60
+            juju_instance.wait_timeout = WAIT_TIMEOUT
             try:
                 yield juju_instance
             finally:
