@@ -80,7 +80,8 @@ def test_deploy_charm(juju: jubilant.Juju, request):
         f"{CHARM_NAME}:feast-configuration",
     )
 
-    juju.wait(jubilant.all_active, successes=2)
+    # Doubling the default timeout https://github.com/canonical/jubilant/blob/main/jubilant/_juju.py#L98
+    juju.wait(jubilant.all_active, timeout=6 * 60.0)
 
 
 def test_ingress_setup(juju: jubilant.Juju):
@@ -98,7 +99,8 @@ def test_ingress_setup(juju: jubilant.Juju):
     juju.wait(lambda status: status.apps[ISTIO_PILOT.charm].is_active)
 
     juju.integrate(f"{ISTIO_PILOT.charm}:ingress", f"{CHARM_NAME}:ingress")
-    juju.wait(jubilant.all_active)
+    # Doubling the default timeout https://github.com/canonical/jubilant/blob/main/jubilant/_juju.py#L98
+    juju.wait(jubilant.all_active, timeout=6 * 60.0)
 
 
 def charm_path_from_root(charm_dir_name: str) -> Path:
