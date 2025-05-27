@@ -3,6 +3,7 @@ from pathlib import Path
 
 import jubilant
 import yaml
+from charmed_kubeflow_chisme.testing import CharmSpec
 
 logger = logging.getLogger(__name__)
 
@@ -10,98 +11,93 @@ METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 IMAGE = METADATA["resources"]["oci-image"]["upstream-source"]
 CHARM_NAME = METADATA["name"]
 
-OFFLINE_STORE_APP = "offline-store"
-ONLINE_STORE_APP = "online-store"
-REGISTRY_APP = "registry"
+# Define specs without `app=` (charm name == app name is assumed)
+OFFLINE_STORE = CharmSpec(
+    charm="postgresql-k8s", channel="14/stable", trust=True, config={"profile": "testing"}
+)
+ONLINE_STORE = CharmSpec(
+    charm="postgresql-k8s", channel="14/stable", trust=True, config={"profile": "testing"}
+)
+REGISTRY = CharmSpec(
+    charm="postgresql-k8s", channel="14/stable", trust=True, config={"profile": "testing"}
+)
 
-ADMISSION_WEBHOOK = "admission-webhook"
-RESOURCE_DISPATCHER = "resource-dispatcher"
-METACONTROLLER = "metacontroller-operator"
-FEAST_INTEGRATOR = "feast-integrator"
-ISTIO_GATEWAY = "istio-gateway"
-ISTIO_PILOT = "istio-pilot"
+FEAST_INTEGRATOR = CharmSpec(charm="feast-integrator", channel="latest/edge", trust=True)
+METACONTROLLER = CharmSpec(charm="metacontroller-operator", channel="latest/edge", trust=True)
+RESOURCE_DISPATCHER = CharmSpec(charm="resource-dispatcher", channel="latest/edge", trust=True)
+ADMISSION_WEBHOOK = CharmSpec(charm="admission-webhook", channel="latest/edge", trust=True)
+
+ISTIO_GATEWAY = CharmSpec(
+    charm="istio-gateway", channel="latest/edge", trust=True, config={"kind": "ingress"}
+)
+ISTIO_PILOT = CharmSpec(
+    charm="istio-pilot",
+    channel="latest/edge",
+    trust=True,
+    config={"default-gateway": "istio-gateway"},
+)
 
 
 def test_deploy_charm(juju: jubilant.Juju, request):
-    """Deploy Feast UI charm and all required dependencies."""
+    """Deploy Feast UI charm and required dependencies."""
     juju.deploy(
         charm=request.config.getoption("--charm-path"),
         resources={"oci-image": IMAGE},
         trust=True,
     )
 
-    juju.deploy(charm=charm_path_from_root(FEAST_INTEGRATOR))
+    juju.deploy(charm=charm_path_from_root(FEAST_INTEGRATOR.charm))
 
     juju.wait(lambda status: status.apps[CHARM_NAME].is_blocked)
 
-    # Deploy offline store and integrate
-    juju.deploy(
-        charm="postgresql-k8s",
-        app=OFFLINE_STORE_APP,
-        channel="14/stable",
-        trust=True,
-        config={"profile": "testing"},
+    for spec, app in zip(
+        [OFFLINE_STORE, ONLINE_STORE, REGISTRY],
+        ["offline-store", "online-store", "registry"],
+    ):
+        juju.deploy(
+            charm=spec.charm,
+            app=app,
+            channel=spec.channel,
+            trust=spec.trust,
+            config=spec.config,
+        )
+        juju.integrate(f"{FEAST_INTEGRATOR.charm}:{app}", app)
+
+    for component in [METACONTROLLER, RESOURCE_DISPATCHER, ADMISSION_WEBHOOK]:
+        juju.deploy(
+            charm=component.charm,
+            channel=component.channel,
+            trust=component.trust,
+        )
+
+    juju.integrate(f"{FEAST_INTEGRATOR.charm}:secrets", f"{RESOURCE_DISPATCHER.charm}:secrets")
+    juju.integrate(
+        f"{FEAST_INTEGRATOR.charm}:pod-defaults",
+        f"{RESOURCE_DISPATCHER.charm}:pod-defaults",
     )
-    juju.integrate(f"{FEAST_INTEGRATOR}:{OFFLINE_STORE_APP}", OFFLINE_STORE_APP)
-
-    # Deploy online store and integrate
-    juju.deploy(
-        charm="postgresql-k8s",
-        app=ONLINE_STORE_APP,
-        channel="14/stable",
-        trust=True,
-        config={"profile": "testing"},
+    juju.integrate(
+        f"{FEAST_INTEGRATOR.charm}:feast-configuration",
+        f"{CHARM_NAME}:feast-configuration",
     )
-    juju.integrate(f"{FEAST_INTEGRATOR}:{ONLINE_STORE_APP}", ONLINE_STORE_APP)
-
-    # Deploy registry and integrate
-    juju.deploy(
-        charm="postgresql-k8s",
-        app=REGISTRY_APP,
-        channel="14/stable",
-        trust=True,
-        config={"profile": "testing"},
-    )
-    juju.integrate(f"{FEAST_INTEGRATOR}:{REGISTRY_APP}", REGISTRY_APP)
-
-    # Deploy supporting services
-    juju.deploy(charm=METACONTROLLER, channel="latest/edge", trust=True)
-    juju.deploy(charm=RESOURCE_DISPATCHER, channel="latest/edge", trust=True)
-    juju.deploy(charm=ADMISSION_WEBHOOK, channel="latest/edge", trust=True)
-
-    # Integrate secrets and pod-defaults
-    juju.integrate(f"{FEAST_INTEGRATOR}:secrets", f"{RESOURCE_DISPATCHER}:secrets")
-    juju.integrate(f"{FEAST_INTEGRATOR}:pod-defaults", f"{RESOURCE_DISPATCHER}:pod-defaults")
-
-    # Integrate feast-configuration
-    juju.integrate(f"{FEAST_INTEGRATOR}:feast-configuration", f"{CHARM_NAME}:feast-configuration")
 
     juju.wait(jubilant.all_active, successes=2)
 
 
 def test_ingress_setup(juju: jubilant.Juju):
-    """Deploy Istio and relate with Feast UI ingress interface."""
-    juju.deploy(
-        charm=ISTIO_GATEWAY,
-        channel="latest/edge",
-        config={"kind": "ingress"},
-        trust=True,
-    )
+    """Deploy Istio and relate it with Feast UI ingress interface."""
+    for spec in [ISTIO_GATEWAY, ISTIO_PILOT]:
+        juju.deploy(
+            charm=spec.charm,
+            channel=spec.channel,
+            config=spec.config,
+            trust=spec.trust,
+        )
 
-    juju.deploy(
-        charm=ISTIO_PILOT,
-        channel="latest/edge",
-        config={"default-gateway": ISTIO_GATEWAY},
-        trust=True,
-    )
+    juju.integrate(ISTIO_PILOT.charm, ISTIO_GATEWAY.charm)
+    juju.wait(lambda status: status.apps[ISTIO_GATEWAY.charm].is_active)
+    juju.wait(lambda status: status.apps[ISTIO_PILOT.charm].is_active)
 
-    juju.integrate(ISTIO_PILOT, ISTIO_GATEWAY)
-
-    juju.wait(lambda status: status.apps[ISTIO_GATEWAY].is_active)
-    juju.wait(lambda status: status.apps[ISTIO_PILOT].is_active)
-
-    juju.integrate(f"{ISTIO_PILOT}:ingress", f"{CHARM_NAME}:ingress")
-
+    juju.integrate(f"{ISTIO_PILOT.charm}:ingress", f"{CHARM_NAME}:ingress")
     juju.wait(jubilant.all_active)
 
 

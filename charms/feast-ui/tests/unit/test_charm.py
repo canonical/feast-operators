@@ -16,6 +16,15 @@ builtin_open = open  # save the unpatched version
 
 
 def mock_open_custom(*args, **kwargs):
+    """Patch the built-in open() function to simulate Kubernetes namespace file.
+
+    This is required because the KubernetesServicePatch used by the charm
+    attempts to read the current Kubernetes namespace from the file:
+    `/var/run/secrets/kubernetes.io/serviceaccount/namespace`.
+
+    In the test environment, that file does not exist, so we patch `open()`
+    to simulate it and return dummy content.
+    """
     if args[0] == "/var/run/secrets/kubernetes.io/serviceaccount/namespace":
         return mock_open(read_data="whatever")(*args, **kwargs)
     return builtin_open(*args, **kwargs)
@@ -98,7 +107,7 @@ def test_empty_feature_store_yaml(mock_get_yaml, ctx):
                 interface="feast_configuration",
             )
         ],
-        containers=[Container(name="feast-ui-operator", can_connect=True)],
+        containers=[Container(name="feast-ui", can_connect=True)],
     )
     state_out = ctx.run(ctx.on.install(), state_in)
 
@@ -129,7 +138,7 @@ def test_valid_feature_store_yaml(mock_get_yaml, ctx):
                 interface="feast_configuration",
             )
         ],
-        containers=[Container(name="feast-ui-operator", can_connect=True)],
+        containers=[Container(name="feast-ui", can_connect=True)],
     )
     state_out = ctx.run(ctx.on.install(), state_in)
 

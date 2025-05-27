@@ -5,8 +5,8 @@ output "app_name" {
 
 output "requires" {
   value = {
-    feast-configuration = "feast-configuration",
+    feast_configuration = "feast-configuration",
     ingress             = "ingress",
-    dashboard-links     = "dashboard-links",
+    dashboard_links     = "dashboard-links",
   }
 }

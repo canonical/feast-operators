@@ -9,6 +9,7 @@ from charmed_kubeflow_chisme.components.component import Component
 from charmed_kubeflow_chisme.exceptions import ErrorWithStatus
 from charms.feast_integrator.v0.feast_store_configuration import (
     FeastStoreConfigurationDataInvalidError,
+    FeastStoreConfigurationRelationDataMissingError,
     FeastStoreConfigurationRelationError,
     FeastStoreConfigurationRequirer,
 )
@@ -52,7 +53,10 @@ class StoreConfigurationReceiverComponent(Component):
             yaml_config = self.requirer.get_feature_store_yaml()
             return yaml_config
 
-        except FeastStoreConfigurationRelationError as e:
+        except (
+            FeastStoreConfigurationRelationError,
+            FeastStoreConfigurationRelationDataMissingError,
+        ) as e:
             raise ErrorWithStatus(
                 f"Waiting for relation data: {e}",
                 WaitingStatus,
@@ -73,7 +77,7 @@ class StoreConfigurationReceiverComponent(Component):
                 return WaitingStatus("feature_store.yaml is missing or empty")
         except ErrorWithStatus as err:
             return err.status
-        except Exception:
-            return BlockedStatus(f"[{self.name}] Failed to compute status. See logs for details.")
+        except Exception as err:
+            return WaitingStatus(f"[{self.name}] Failed to compute status: {err}.")
 
         return ActiveStatus()

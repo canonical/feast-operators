@@ -3,7 +3,17 @@ name: feast-ui
 summary: Feast UI charm.
 
 description: |
-  Feast UI charm is the center of the Feast bundle
+  Feast UI charm provides the user interface for interacting with Feast,
+  the feature store for machine learning.
+
+  The charm:
+  1. Serves a web-based interface for managing and inspecting Feast projects.
+  2. Integrates with the Feast Integrator charm to receive configuration details.
+  3. Supports ingress integration to expose the UI through a gateway in a Kubeflow environment.
+
+  Feast UI is a critical component of the Feast bundle, enabling users to
+  visualize and interact with their feature store setups.
+
 
 website: https://charmhub.io/feast-ui
 
@@ -12,7 +22,7 @@ source: https://github.com/canonical/feast-operators
 issues: https://github.com/canonical/feast-operators/issues
 
 containers:
-  feast-ui-operator:
+  feast-ui:
     resource: oci-image
 
 resources:

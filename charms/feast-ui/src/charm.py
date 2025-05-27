@@ -34,7 +34,7 @@ from components.store_configuration_reciver_component import (
 logger = logging.getLogger(__name__)
 
 HTTP_PORT = 8888
-CONTAINER_NAME = "feast-ui-operator"
+CONTAINER_NAME = "feast-ui"
 SERVICE_NAME = "feast-ui"
 DEST_PATH = "/home/ubuntu/feature_store.yaml"
 RELATION_NAME = "feast-configuration"
