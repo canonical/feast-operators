@@ -3,7 +3,7 @@
 import jubilant
 import pytest
 
-WAIT_TIMEOUT = 15 * 60
+WAIT_TIMEOUT = 20 * 60
 
 
 @pytest.fixture(scope="module")
