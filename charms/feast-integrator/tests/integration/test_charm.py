@@ -70,17 +70,25 @@ def test_deploy_charm(juju: jubilant.Juju, request):
     juju.wait(lambda status: status.apps[CHARM_NAME].is_blocked)
 
     # Deploy 3 Postgresql charms as offline store, online store, registry
-    for db_type in [OFFLINE_STORE_APP_NAME, ONLINE_STORE_APP_NAME, REGISTRY_APP_NAME]:
+    for db_charm in [OFFLINE_STORE_APP_NAME, ONLINE_STORE_APP_NAME, REGISTRY_APP_NAME]:
         juju.deploy(
             charm="postgresql-k8s",
-            app=db_type,
+            app=db_charm,
             channel="14/stable",
             trust=True,
             config={"profile": "testing"},
         )
 
-        # Integrate with each DB charm
-        juju.integrate(f"{CHARM_NAME}:{db_type}", db_type)
+    # Wait for Postgresql charms to be active
+    juju.wait(
+        lambda status: jubilant.all_active(
+            status, OFFLINE_STORE_APP_NAME, ONLINE_STORE_APP_NAME, REGISTRY_APP_NAME
+        ),
+    )
+
+    # Integrate with each DB charm
+    for db_charm in [OFFLINE_STORE_APP_NAME, ONLINE_STORE_APP_NAME, REGISTRY_APP_NAME]:
+        juju.integrate(f"{CHARM_NAME}:{db_charm}", db_charm)
 
     # Deploy metacontroller due to resource-dispatcher depending on the DecoratorController CRD
     juju.deploy(
