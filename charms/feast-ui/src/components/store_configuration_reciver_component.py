@@ -77,7 +77,5 @@ class StoreConfigurationReceiverComponent(Component):
                 return WaitingStatus("feature_store.yaml is missing or empty")
         except ErrorWithStatus as err:
             return err.status
-        except Exception as err:
-            return WaitingStatus(f"[{self.name}] Failed to compute status: {err}.")
 
         return ActiveStatus()
