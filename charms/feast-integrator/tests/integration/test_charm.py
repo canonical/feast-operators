@@ -100,9 +100,6 @@ def test_deploy_charm(juju: jubilant.Juju, request):
     # Deploy resource-dispatcher
     juju.deploy(charm=RESOURCE_DISPATCHER_CHARM_NAME, channel="latest/edge", trust=True)
 
-    juju.integrate(f"{CHARM_NAME}:secrets", f"{RESOURCE_DISPATCHER_CHARM_NAME}:secrets")
-    juju.integrate(f"{CHARM_NAME}:pod-defaults", f"{RESOURCE_DISPATCHER_CHARM_NAME}:pod-defaults")
-
     # Deploy admission webhook to get the poddefaults CRD
     juju.deploy(
         charm=ADMISSION_WEBHOOK_CHARM_NAME,
@@ -110,6 +107,23 @@ def test_deploy_charm(juju: jubilant.Juju, request):
         trust=True,
     )
 
+    # Wait for dependency charms to be active
+    juju.wait(
+        lambda status: jubilant.all_active(
+            status,
+            [
+                METACONTROLLER_CHARM_NAME,
+                RESOURCE_DISPATCHER_CHARM_NAME,
+                ADMISSION_WEBHOOK_CHARM_NAME,
+            ],
+        ),
+    )
+
+    # Relate to resource-dispatcher
+    juju.integrate(f"{CHARM_NAME}:secrets", f"{RESOURCE_DISPATCHER_CHARM_NAME}:secrets")
+    juju.integrate(f"{CHARM_NAME}:pod-defaults", f"{RESOURCE_DISPATCHER_CHARM_NAME}:pod-defaults")
+
+    # Wait for all charms to be active
     # Set successes to 1 due to the default being 3 to speed up tests
     juju.wait(jubilant.all_active, successes=1)
 
