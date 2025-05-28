@@ -70,17 +70,25 @@ def test_deploy_charm(juju: jubilant.Juju, request):
     juju.wait(lambda status: status.apps[CHARM_NAME].is_blocked)
 
     # Deploy 3 Postgresql charms as offline store, online store, registry
-    for db_type in [OFFLINE_STORE_APP_NAME, ONLINE_STORE_APP_NAME, REGISTRY_APP_NAME]:
+    for db_charm in [OFFLINE_STORE_APP_NAME, ONLINE_STORE_APP_NAME, REGISTRY_APP_NAME]:
         juju.deploy(
             charm="postgresql-k8s",
-            app=db_type,
+            app=db_charm,
             channel="14/stable",
             trust=True,
             config={"profile": "testing"},
         )
 
-        # Integrate with each DB charm
-        juju.integrate(f"{CHARM_NAME}:{db_type}", db_type)
+    # Wait for Postgresql charms to be active
+    juju.wait(
+        lambda status: jubilant.all_active(
+            status, [OFFLINE_STORE_APP_NAME, ONLINE_STORE_APP_NAME, REGISTRY_APP_NAME]
+        ),
+    )
+
+    # Integrate with each DB charm
+    for db_charm in [OFFLINE_STORE_APP_NAME, ONLINE_STORE_APP_NAME, REGISTRY_APP_NAME]:
+        juju.integrate(f"{CHARM_NAME}:{db_charm}", db_charm)
 
     # Deploy metacontroller due to resource-dispatcher depending on the DecoratorController CRD
     juju.deploy(
@@ -92,9 +100,6 @@ def test_deploy_charm(juju: jubilant.Juju, request):
     # Deploy resource-dispatcher
     juju.deploy(charm=RESOURCE_DISPATCHER_CHARM_NAME, channel="latest/edge", trust=True)
 
-    juju.integrate(f"{CHARM_NAME}:secrets", f"{RESOURCE_DISPATCHER_CHARM_NAME}:secrets")
-    juju.integrate(f"{CHARM_NAME}:pod-defaults", f"{RESOURCE_DISPATCHER_CHARM_NAME}:pod-defaults")
-
     # Deploy admission webhook to get the poddefaults CRD
     juju.deploy(
         charm=ADMISSION_WEBHOOK_CHARM_NAME,
@@ -102,7 +107,25 @@ def test_deploy_charm(juju: jubilant.Juju, request):
         trust=True,
     )
 
-    juju.wait(jubilant.all_active, successes=2)
+    # Wait for dependency charms to be active
+    juju.wait(
+        lambda status: jubilant.all_active(
+            status,
+            [
+                METACONTROLLER_CHARM_NAME,
+                RESOURCE_DISPATCHER_CHARM_NAME,
+                ADMISSION_WEBHOOK_CHARM_NAME,
+            ],
+        ),
+    )
+
+    # Relate to resource-dispatcher
+    juju.integrate(f"{CHARM_NAME}:secrets", f"{RESOURCE_DISPATCHER_CHARM_NAME}:secrets")
+    juju.integrate(f"{CHARM_NAME}:pod-defaults", f"{RESOURCE_DISPATCHER_CHARM_NAME}:pod-defaults")
+
+    # Wait for all charms to be active
+    # Set successes to 1 due to the default being 3 to speed up tests
+    juju.wait(jubilant.all_active, successes=1)
 
 
 RETRY_FOR_THREE_MINUTES = tenacity.Retrying(
