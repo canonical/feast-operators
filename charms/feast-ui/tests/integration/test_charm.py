@@ -3,39 +3,23 @@ from pathlib import Path
 
 import jubilant
 import yaml
-from charmed_kubeflow_chisme.testing import CharmSpec
+from charms_dependencies import (
+    ADMISSION_WEBHOOK,
+    FEAST_INTEGRATOR,
+    ISTIO_GATEWAY,
+    ISTIO_PILOT,
+    METACONTROLLER,
+    OFFLINE_STORE,
+    ONLINE_STORE,
+    REGISTRY,
+    RESOURCE_DISPATCHER,
+)
 
 logger = logging.getLogger(__name__)
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 IMAGE = METADATA["resources"]["oci-image"]["upstream-source"]
 CHARM_NAME = METADATA["name"]
-
-# Define specs without `app=` (charm name == app name is assumed)
-OFFLINE_STORE = CharmSpec(
-    charm="postgresql-k8s", channel="14/stable", trust=True, config={"profile": "testing"}
-)
-ONLINE_STORE = CharmSpec(
-    charm="postgresql-k8s", channel="14/stable", trust=True, config={"profile": "testing"}
-)
-REGISTRY = CharmSpec(
-    charm="postgresql-k8s", channel="14/stable", trust=True, config={"profile": "testing"}
-)
-
-FEAST_INTEGRATOR = CharmSpec(charm="feast-integrator", channel="latest/edge", trust=True)
-METACONTROLLER = CharmSpec(charm="metacontroller-operator", channel="latest/edge", trust=True)
-RESOURCE_DISPATCHER = CharmSpec(charm="resource-dispatcher", channel="latest/edge", trust=True)
-ADMISSION_WEBHOOK = CharmSpec(charm="admission-webhook", channel="latest/edge", trust=True)
-
-ISTIO_GATEWAY = CharmSpec(
-    charm="istio-gateway", channel="latest/edge", trust=True, config={"kind": "ingress"}
-)
-ISTIO_PILOT = CharmSpec(
-    charm="istio-pilot",
-    channel="latest/edge",
-    trust=True,
-    config={"default-gateway": "istio-gateway"},
-)
 
 
 def test_deploy_charm(juju: jubilant.Juju, request):

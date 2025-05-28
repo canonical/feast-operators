@@ -22,8 +22,9 @@ Make sure you have a valid OCI image published or accessible for `feast-ui`.
 
 This charm supports the following relations:
 
-- `ingress` (provided): for exposing the UI via Istio ingress
+- `ingress` (required): for exposing the UI via Istio ingress
 - `feast-configuration` (required): receives registry info and config from the Feast Integrator
+- `dashboard-links` (required): for integrating UI via kubeflow-dashboard
 
 To relate with Istio ingress:
 
