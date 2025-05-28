@@ -110,7 +110,8 @@ def test_deploy_charm(juju: jubilant.Juju, request):
         trust=True,
     )
 
-    juju.wait(jubilant.all_active, successes=2)
+    # Set successes to 1 due to the default being 3 to speed up tests
+    juju.wait(jubilant.all_active, successes=1)
 
 
 RETRY_FOR_THREE_MINUTES = tenacity.Retrying(
