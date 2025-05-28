@@ -1,0 +1,79 @@
+name: feast-ui
+
+summary: Feast UI charm.
+
+description: |
+  Feast UI charm provides the user interface for interacting with Feast,
+  the feature store for machine learning.
+
+  The charm:
+  1. Serves a web-based interface for managing and inspecting Feast projects.
+  2. Integrates with the Feast Integrator charm to receive configuration details.
+  3. Supports ingress integration to expose the UI through a gateway in a Kubeflow environment.
+
+  Feast UI is a critical component of the Feast bundle, enabling users to
+  visualize and interact with their feature store setups.
+
+
+website: https://charmhub.io/feast-ui
+
+source: https://github.com/canonical/feast-operators
+
+issues: https://github.com/canonical/feast-operators/issues
+
+containers:
+  feast-ui:
+    resource: oci-image
+
+resources:
+  oci-image:
+    type: oci-image
+    description: Backing OCI image
+    upstream-source: charmedkubeflow/feast-ui:0.49.0-9ca03bd
+
+requires:
+  feast-configuration:
+    interface: feast-configuration
+    limit: 1
+  ingress:
+    interface: ingress
+    schema:
+      v2:
+        requires:
+          type: object
+          properties:
+            service:
+              type: string
+            port:
+              type: integer
+            namespace:
+              type: string
+            prefix:
+              type: string
+            rewrite:
+              type: string
+          required:
+          - service
+          - port
+          - namespace
+          - prefix
+      v1:
+        requires:
+          type: object
+          properties:
+            service:
+              type: string
+            port:
+              type: integer
+            prefix:
+              type: string
+            rewrite:
+              type: string
+          required:
+          - service
+          - port
+          - prefix
+    versions: [v1]
+    __schema_source: https://raw.githubusercontent.com/canonical/operator-schemas/master/ingress.yaml
+  dashboard-links:
+    interface: kubeflow_dashboard_links
