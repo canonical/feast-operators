@@ -50,6 +50,11 @@ class StoreConfigurationSenderComponent(Component):
             charm=self.charm, relation_name=self.relation_name
         )
 
+        self._events_to_observe = [
+            self.charm.on[relation_name].relation_created,
+            self.charm.on[relation_name].relation_broken,
+        ]
+
     def create_store_configuration(self) -> FeastStoreConfiguration:
         """Create the FeastStoreConfiguration from the input context."""
         # Get databases context
