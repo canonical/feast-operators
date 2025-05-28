@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 IMAGE = METADATA["resources"]["oci-image"]["upstream-source"]
 CHARM_NAME = METADATA["name"]
+FEAST_DBS_NAMES = ["offline-store", "online-store", "registry"]
 
 
 def test_deploy_charm(juju: jubilant.Juju, request):
@@ -32,11 +33,11 @@ def test_deploy_charm(juju: jubilant.Juju, request):
 
     juju.deploy(charm=charm_path_from_root(FEAST_INTEGRATOR.charm))
 
-    juju.wait(lambda status: status.apps[CHARM_NAME].is_blocked)
+    juju.wait(lambda status: status.apps[CHARM_NAME].is_blocked, successes=1)
 
     for spec, app in zip(
         [OFFLINE_STORE, ONLINE_STORE, REGISTRY],
-        ["offline-store", "online-store", "registry"],
+        FEAST_DBS_NAMES,
     ):
         juju.deploy(
             charm=spec.charm,
@@ -45,6 +46,11 @@ def test_deploy_charm(juju: jubilant.Juju, request):
             trust=spec.trust,
             config=spec.config,
         )
+
+    # Wait for Postgresql charms to be active
+    juju.wait(lambda status: jubilant.all_active(status, FEAST_DBS_NAMES), successes=1)
+
+    for app in FEAST_DBS_NAMES:
         juju.integrate(f"{FEAST_INTEGRATOR.charm}:{app}", app)
 
     for component in [METACONTROLLER, RESOURCE_DISPATCHER, ADMISSION_WEBHOOK]:
@@ -54,17 +60,33 @@ def test_deploy_charm(juju: jubilant.Juju, request):
             trust=component.trust,
         )
 
+    # Wait for dependency charms to be active
+    juju.wait(
+        lambda status: jubilant.all_active(
+            status,
+            [
+                METACONTROLLER.charm,
+                RESOURCE_DISPATCHER.charm,
+                ADMISSION_WEBHOOK.charm,
+            ],
+        ),
+        successes=1,
+    )
+
+    # Relate to resource-dispatcher
     juju.integrate(f"{FEAST_INTEGRATOR.charm}:secrets", f"{RESOURCE_DISPATCHER.charm}:secrets")
     juju.integrate(
         f"{FEAST_INTEGRATOR.charm}:pod-defaults",
         f"{RESOURCE_DISPATCHER.charm}:pod-defaults",
     )
+
+    # Relate to feast-integrator
     juju.integrate(
         f"{FEAST_INTEGRATOR.charm}:feast-configuration",
         f"{CHARM_NAME}:feast-configuration",
     )
 
-    juju.wait(jubilant.all_active, successes=2)
+    juju.wait(jubilant.all_active, successes=1)
 
 
 def test_ingress_setup(juju: jubilant.Juju):
@@ -78,11 +100,11 @@ def test_ingress_setup(juju: jubilant.Juju):
         )
 
     juju.integrate(ISTIO_PILOT.charm, ISTIO_GATEWAY.charm)
-    juju.wait(lambda status: status.apps[ISTIO_GATEWAY.charm].is_active)
-    juju.wait(lambda status: status.apps[ISTIO_PILOT.charm].is_active)
+    juju.wait(lambda status: status.apps[ISTIO_GATEWAY.charm].is_active, successes=1)
+    juju.wait(lambda status: status.apps[ISTIO_PILOT.charm].is_active, successes=1)
 
     juju.integrate(f"{ISTIO_PILOT.charm}:ingress", f"{CHARM_NAME}:ingress")
-    juju.wait(jubilant.all_active, successes=2)
+    juju.wait(jubilant.all_active, successes=1)
 
 
 def charm_path_from_root(charm_dir_name: str) -> Path:
