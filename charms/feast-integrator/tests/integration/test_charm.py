@@ -82,7 +82,7 @@ def test_deploy_charm(juju: jubilant.Juju, request):
     # Wait for Postgresql charms to be active
     juju.wait(
         lambda status: jubilant.all_active(
-            status, OFFLINE_STORE_APP_NAME, ONLINE_STORE_APP_NAME, REGISTRY_APP_NAME
+            status, [OFFLINE_STORE_APP_NAME, ONLINE_STORE_APP_NAME, REGISTRY_APP_NAME]
         ),
     )
 
