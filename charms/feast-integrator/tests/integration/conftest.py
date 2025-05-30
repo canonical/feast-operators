@@ -17,6 +17,12 @@ def juju(request: pytest.FixtureRequest):
             log = juju_instance.debug_log(limit=1000)
             print(log, end="")
 
+    def print_juju_status(juju_instance: jubilant.Juju):
+        if request.session.testsfailed:
+            print(f"[DEBUG] Fetching juju status for model: {juju_instance.model}")
+            status = juju_instance.status()
+            print(status)
+
     if model_name:
         juju_instance = jubilant.Juju(model=model_name)
         juju_instance.wait_timeout = WAIT_TIMEOUT
@@ -24,6 +30,7 @@ def juju(request: pytest.FixtureRequest):
             yield juju_instance
         finally:
             print_debug_log(juju_instance)
+            print_juju_status(juju_instance)
     else:
         with jubilant.temp_model(keep=keep_models) as juju_instance:
             juju_instance.wait_timeout = WAIT_TIMEOUT
@@ -31,6 +38,7 @@ def juju(request: pytest.FixtureRequest):
                 yield juju_instance
             finally:
                 print_debug_log(juju_instance)
+                print_juju_status(juju_instance)
 
 
 def pytest_addoption(parser):
