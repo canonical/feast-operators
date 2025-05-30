@@ -1100,14 +1100,14 @@ format-nongpl = ["fqdn", "idna", "isoduration", "jsonpointer (>1.13)", "rfc3339-
 
 [[package]]
 name = "jubilant"
-version = "0.4.1"
+version = "1.0.1"
 description = "Juju CLI wrapper for charm integration testing"
 optional = false
 python-versions = ">=3.8"
 groups = ["integration"]
 files = [
-    {file = "jubilant-0.4.1-py3-none-any.whl", hash = "sha256:d3fa4bd4bd9de28e41c81010ea0fc1cc3be98be744149a71fd906a613ea177ea"},
-    {file = "jubilant-0.4.1.tar.gz", hash = "sha256:0acec84d6ebe48f305bf3acc484347fb2c25e9aa7451019f7a44893f95c93779"},
+    {file = "jubilant-1.0.1-py3-none-any.whl", hash = "sha256:ecb834320525843d0602bcb6d1623ca5823349de06b18a5296871064b083d77b"},
+    {file = "jubilant-1.0.1.tar.gz", hash = "sha256:4d9e3367b80875517897992bc916748c13236ed7fd6cacd1bc3c78d727f3fc4c"},
 ]
 
 [package.dependencies]
@@ -2767,4 +2767,4 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "22ac77df13506aaaed4d4e08269653c76676b5d08bb2e8d3afa27ef83e53d3bb"
+content-hash = "15c7e35761ea905e8bee24906b33aebe5b9340c50e1007361446418fd59fe0b2"

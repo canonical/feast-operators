@@ -83,9 +83,7 @@ def test_deploy_charm(juju: jubilant.Juju, request):
 
     # Wait for Postgresql charms to be active
     juju.wait(
-        lambda status: jubilant.all_active(
-            status, [OFFLINE_STORE_APP_NAME, ONLINE_STORE_APP_NAME, REGISTRY_APP_NAME]
-        ),
+        lambda status: jubilant.all_active(status, OFFLINE_STORE_APP_NAME, ONLINE_STORE_APP_NAME, REGISTRY_APP_NAME),
     )
 
     logger.info(f"Integrating {CHARM_NAME} with DB charms")
@@ -115,14 +113,7 @@ def test_deploy_charm(juju: jubilant.Juju, request):
 
     # Wait for dependency charms to be active
     juju.wait(
-        lambda status: jubilant.all_active(
-            status,
-            [
-                METACONTROLLER_CHARM_NAME,
-                RESOURCE_DISPATCHER_CHARM_NAME,
-                ADMISSION_WEBHOOK_CHARM_NAME,
-            ],
-        ),
+        lambda status: jubilant.all_active(status, METACONTROLLER_CHARM_NAME, RESOURCE_DISPATCHER_CHARM_NAME, ADMISSION_WEBHOOK_CHARM_NAME),
     )
 
     logger.info(f"Integrating {CHARM_NAME} with {RESOURCE_DISPATCHER_CHARM_NAME}")

@@ -52,7 +52,7 @@ serialized-data-interface = "^0.7.0"
 optional = true
 
 [tool.poetry.group.integration.dependencies]
-jubilant = "^0.4.1"
+jubilant = "^1.0.1"
 pytest = "^8.3.5"
 charmed-kubeflow-chisme = "^0.4.6"
 
