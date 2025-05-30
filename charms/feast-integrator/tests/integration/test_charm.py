@@ -100,7 +100,7 @@ def test_deploy_charm(juju: jubilant.Juju, request):
     )
 
     logger.info(f"Waiting for {METACONTROLLER_CHARM_NAME} charm to be active..")
-    juju.wait(lambda status: status.apps[CHARM_NAME].is_active)
+    juju.wait(lambda status: status.apps[METACONTROLLER_CHARM_NAME].is_active)
 
     # Deploy resource-dispatcher
     juju.deploy(charm=RESOURCE_DISPATCHER_CHARM_NAME, channel="latest/edge", trust=True)
