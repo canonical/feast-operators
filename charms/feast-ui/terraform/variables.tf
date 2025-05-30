@@ -1,7 +1,7 @@
 variable "app_name" {
   description = "Application name"
   type        = string
-  default     = "feast-integrator"
+  default     = "feast-ui"
 }
 
 variable "channel" {
