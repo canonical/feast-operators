@@ -79,12 +79,14 @@ def test_deploy_charm(juju: jubilant.Juju, request):
             config={"profile": "testing"},
         )
 
+    logger.info("Waiting for DB charms to be active..")
+
     # Wait for Postgresql charms to be active
     juju.wait(
-        lambda status: jubilant.all_active(
-            status, [OFFLINE_STORE_APP_NAME, ONLINE_STORE_APP_NAME, REGISTRY_APP_NAME]
-        ),
+        lambda status: jubilant.all_active(status, OFFLINE_STORE_APP_NAME, ONLINE_STORE_APP_NAME, REGISTRY_APP_NAME),
     )
+
+    logger.info(f"Integrating {CHARM_NAME} with DB charms")
 
     # Integrate with each DB charm
     for db_charm in [OFFLINE_STORE_APP_NAME, ONLINE_STORE_APP_NAME, REGISTRY_APP_NAME]:
@@ -97,6 +99,9 @@ def test_deploy_charm(juju: jubilant.Juju, request):
         trust=True,
     )
 
+    logger.info(f"Waiting for {METACONTROLLER_CHARM_NAME} charm to be active..")
+    juju.wait(lambda status: status.apps[METACONTROLLER_CHARM_NAME].is_active)
+
     # Deploy resource-dispatcher
     juju.deploy(charm=RESOURCE_DISPATCHER_CHARM_NAME, channel="latest/edge", trust=True)
 
@@ -107,22 +112,21 @@ def test_deploy_charm(juju: jubilant.Juju, request):
         trust=True,
     )
 
+    logger.info("Waiting for dependency charms to be active..")
+
     # Wait for dependency charms to be active
     juju.wait(
-        lambda status: jubilant.all_active(
-            status,
-            [
-                METACONTROLLER_CHARM_NAME,
-                RESOURCE_DISPATCHER_CHARM_NAME,
-                ADMISSION_WEBHOOK_CHARM_NAME,
-            ],
-        ),
+        lambda status: jubilant.all_active(status, METACONTROLLER_CHARM_NAME, RESOURCE_DISPATCHER_CHARM_NAME, ADMISSION_WEBHOOK_CHARM_NAME),
     )
+
+    logger.info(f"Integrating {CHARM_NAME} with {RESOURCE_DISPATCHER_CHARM_NAME}")
 
     # Relate to resource-dispatcher
     juju.integrate(f"{CHARM_NAME}:secrets", f"{RESOURCE_DISPATCHER_CHARM_NAME}:secrets")
     juju.integrate(f"{CHARM_NAME}:pod-defaults", f"{RESOURCE_DISPATCHER_CHARM_NAME}:pod-defaults")
 
+    logger.info("Waiting for all charms to be active..")
+    
     # Wait for all charms to be active
     # Set successes to 1 due to the default being 3 to speed up tests
     juju.wait(jubilant.all_active, successes=1)
