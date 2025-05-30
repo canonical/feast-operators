@@ -1,5 +1,5 @@
 from pathlib import Path
-from unittest.mock import mock_open, patch
+from unittest.mock import patch
 
 import ops
 import pytest
@@ -11,23 +11,6 @@ from ops.testing import Container, Context, State
 from charm import FeastUICharm
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
-
-builtin_open = open  # save the unpatched version
-
-
-def mock_open_custom(*args, **kwargs):
-    """Patch the built-in open() function to simulate Kubernetes namespace file.
-
-    This is required because the KubernetesServicePatch used by the charm
-    attempts to read the current Kubernetes namespace from the file:
-    `/var/run/secrets/kubernetes.io/serviceaccount/namespace`.
-
-    In the test environment, that file does not exist, so we patch `open()`
-    to simulate it and return dummy content.
-    """
-    if args[0] == "/var/run/secrets/kubernetes.io/serviceaccount/namespace":
-        return mock_open(read_data="whatever")(*args, **kwargs)
-    return builtin_open(*args, **kwargs)
 
 
 @pytest.fixture()
@@ -43,7 +26,6 @@ def ctx() -> Context:
         (True, BlockedStatus("[feast-configuration] Missing relation: feast-configuration")),
     ],
 )
-@patch("builtins.open", mock_open_custom)
 def test_leadership_and_relation_gate(ctx, leader, expected_status):
     state_in = State(leader=leader)
     state_out = ctx.run(ctx.on.install(), state_in)
@@ -52,7 +34,6 @@ def test_leadership_and_relation_gate(ctx, leader, expected_status):
     assert expected_status.message in state_out.unit_status.message
 
 
-@patch("builtins.open", mock_open_custom)
 def test_relation_exists_but_empty(ctx):
     """Test when relation exists but no data has been exchanged yet."""
     state_in = State(
@@ -68,7 +49,6 @@ def test_relation_exists_but_empty(ctx):
     assert "Waiting for relation data" in state_out.unit_status.message
 
 
-@patch("builtins.open", mock_open_custom)
 @patch(
     "components.store_configuration_reciver_component.StoreConfigurationReceiverComponent"
     ".get_feature_store_yaml",
@@ -91,7 +71,6 @@ def test_invalid_feature_store_data(mock_get_yaml, ctx):
     assert "Invalid relation data" in state_out.unit_status.message
 
 
-@patch("builtins.open", mock_open_custom)
 @patch(
     "components.store_configuration_reciver_component.StoreConfigurationReceiverComponent"
     ".get_feature_store_yaml",
@@ -115,7 +94,6 @@ def test_empty_feature_store_yaml(mock_get_yaml, ctx):
     assert "feature_store.yaml is missing or empty" in state_out.unit_status.message
 
 
-@patch("builtins.open", mock_open_custom)
 @patch(
     "components.store_configuration_reciver_component.StoreConfigurationReceiverComponent"
     ".get_feature_store_yaml",
