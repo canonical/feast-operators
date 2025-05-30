@@ -11,7 +11,7 @@ output "provides" {
 output "requires" {
   value = {
     offline_store = "offline-store",
-    online_store  = "online_store",
+    online_store  = "online-store",
     registry      = "registry",
     secrets       = "secrets",
     pod_defaults  = "pod-defaults",
