@@ -33,6 +33,7 @@ def test_deploy_charm(juju: jubilant.Juju, request):
 
     juju.deploy(charm=charm_path_from_root(FEAST_INTEGRATOR.charm))
 
+    logger.info(f"Waiting for {CHARM_NAME} to be blocked..")
     juju.wait(lambda status: status.apps[CHARM_NAME].is_blocked, successes=1)
 
     for spec, app in zip(
@@ -48,12 +49,25 @@ def test_deploy_charm(juju: jubilant.Juju, request):
         )
 
     # Wait for Postgresql charms to be active
+    logger.info("Waiting for DB charms to be active..")
     juju.wait(lambda status: jubilant.all_active(status, FEAST_DBS_NAMES), successes=1)
 
     for app in FEAST_DBS_NAMES:
         juju.integrate(f"{FEAST_INTEGRATOR.charm}:{app}", app)
 
-    for component in [METACONTROLLER, RESOURCE_DISPATCHER, ADMISSION_WEBHOOK]:
+    # Deploy metacontroller due to resource-dispatcher depending on the DecoratorController CRD
+    juju.deploy(
+        charm=METACONTROLLER.charm,
+        channel="latest/edge",
+        trust=True,
+    )
+
+    # Wait for metacontroller to be active
+    logger.info(f"Waiting for {METACONTROLLER.charm} charm to be active..")
+    juju.wait(lambda status: status.apps[METACONTROLLER.charm].is_active)
+
+    # Deploy admission-webhook and resource-dispatcher
+    for component in [RESOURCE_DISPATCHER, ADMISSION_WEBHOOK]:
         juju.deploy(
             charm=component.charm,
             channel=component.channel,
@@ -61,6 +75,7 @@ def test_deploy_charm(juju: jubilant.Juju, request):
         )
 
     # Wait for dependency charms to be active
+    logger.info("Waiting for dependency charms to be active..")
     juju.wait(
         lambda status: jubilant.all_active(
             status,
@@ -86,6 +101,7 @@ def test_deploy_charm(juju: jubilant.Juju, request):
         f"{CHARM_NAME}:feast-configuration",
     )
 
+    logger.info("Waiting for all charms to be active..")
     juju.wait(jubilant.all_active, successes=1)
 
 
@@ -100,10 +116,13 @@ def test_ingress_setup(juju: jubilant.Juju):
         )
 
     juju.integrate(ISTIO_PILOT.charm, ISTIO_GATEWAY.charm)
+
+    logger.info("Waiting for istio charms to be active..")
     juju.wait(lambda status: status.apps[ISTIO_GATEWAY.charm].is_active, successes=1)
     juju.wait(lambda status: status.apps[ISTIO_PILOT.charm].is_active, successes=1)
 
     juju.integrate(f"{ISTIO_PILOT.charm}:ingress", f"{CHARM_NAME}:ingress")
+    logger.info("Waiting for all charms to be active..")
     juju.wait(jubilant.all_active, successes=1)
 
 
