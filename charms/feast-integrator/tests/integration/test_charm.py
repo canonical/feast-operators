@@ -67,6 +67,7 @@ def test_deploy_charm(juju: jubilant.Juju, request):
     juju.deploy(charm=request.config.getoption("--charm-path"))
 
     # Check the charm to be blocked due to missing relations
+    logger.info(f"Waiting for {CHARM_NAME} to be blocked..")
     juju.wait(lambda status: status.apps[CHARM_NAME].is_blocked)
 
     # Deploy 3 Postgresql charms as offline store, online store, registry
@@ -80,6 +81,8 @@ def test_deploy_charm(juju: jubilant.Juju, request):
         )
 
     # Wait for Postgresql charms to be active
+    logger.info("Waiting for DB charms to be active..")
+
     juju.wait(
         lambda status: jubilant.all_active(
             status, [OFFLINE_STORE_APP_NAME, ONLINE_STORE_APP_NAME, REGISTRY_APP_NAME]
@@ -97,6 +100,10 @@ def test_deploy_charm(juju: jubilant.Juju, request):
         trust=True,
     )
 
+    # Wait for metacontroller to be active
+    logger.info(f"Waiting for {METACONTROLLER_CHARM_NAME} charm to be active..")
+    juju.wait(lambda status: status.apps[METACONTROLLER_CHARM_NAME].is_active)
+
     # Deploy resource-dispatcher
     juju.deploy(charm=RESOURCE_DISPATCHER_CHARM_NAME, channel="latest/edge", trust=True)
 
@@ -108,6 +115,7 @@ def test_deploy_charm(juju: jubilant.Juju, request):
     )
 
     # Wait for dependency charms to be active
+    logger.info("Waiting for dependency charms to be active..")
     juju.wait(
         lambda status: jubilant.all_active(
             status,
@@ -125,6 +133,7 @@ def test_deploy_charm(juju: jubilant.Juju, request):
 
     # Wait for all charms to be active
     # Set successes to 1 due to the default being 3 to speed up tests
+    logger.info("Waiting for all charms to be active..")
     juju.wait(jubilant.all_active, successes=1)
 
 
@@ -166,12 +175,14 @@ def test_configuration_requirer_charm(juju: jubilant.Juju):
     juju.deploy(charm=charm_path(TESTER_CHARM_NAME))
 
     # Wait until charm is blocked due to missing relation
+    logger.info(f"Waiting for {TESTER_CHARM_NAME} to be blocked..")
     juju.wait(lambda status: status.apps[TESTER_CHARM_NAME].is_blocked)
 
     # Relate to Feast Integrator charm
     juju.integrate(f"{CHARM_NAME}:feast-configuration", f"{TESTER_CHARM_NAME}:feast-configuration")
 
     # Requirer charm should be active
+    logger.info("Waiting for all charms to be active..")
     juju.wait(jubilant.all_active, successes=2)
 
     # Fetch logs
