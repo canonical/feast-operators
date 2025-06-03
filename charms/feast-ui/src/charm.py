@@ -22,8 +22,6 @@ from charms.kubeflow_dashboard.v0.kubeflow_dashboard_links import (
     DashboardLink,
     KubeflowDashboardLinksRequirer,
 )
-from charms.observability_libs.v1.kubernetes_service_patch import KubernetesServicePatch
-from lightkube.models.core_v1 import ServicePort
 from ops import CharmBase, WaitingStatus
 
 from components.pebble_component import FeastUIPebbleService
@@ -63,12 +61,7 @@ class FeastUICharm(CharmBase):
             dashboard_links=DASHBOARD_LINKS,
         )
 
-        # Patch Kubernetes service to expose the HTTP port
-        self.service_patcher = KubernetesServicePatch(
-            self,
-            [ServicePort(HTTP_PORT, name="http")],
-            service_name=f"{self.model.app.name}",
-        )
+        self.unit.set_ports(ops.Port("tcp", HTTP_PORT))
 
         self.charm_reconciler = CharmReconciler(self)
 
@@ -84,7 +77,7 @@ class FeastUICharm(CharmBase):
                 name="relation:ingress",
                 relation_name="ingress",
                 data_to_send={
-                    "prefix": "/feast",
+                    "prefix": "/feast/",
                     "rewrite": "/",
                     "service": self.model.app.name,
                     "namespace": self.model.name,

@@ -2,6 +2,10 @@ import logging
 from pathlib import Path
 
 import jubilant
+import lightkube
+import pytest
+import requests
+import tenacity
 import yaml
 from charms_dependencies import (
     ADMISSION_WEBHOOK,
@@ -14,6 +18,7 @@ from charms_dependencies import (
     REGISTRY,
     RESOURCE_DISPATCHER,
 )
+from lightkube.resources.core_v1 import Service
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +26,12 @@ METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 IMAGE = METADATA["resources"]["oci-image"]["upstream-source"]
 CHARM_NAME = METADATA["name"]
 FEAST_DBS_NAMES = ["offline-store", "online-store", "registry"]
+
+
+@pytest.fixture(scope="session")
+def lightkube_client() -> lightkube.Client:
+    client = lightkube.Client(field_manager=CHARM_NAME)
+    return client
 
 
 def test_deploy_charm(juju: jubilant.Juju, request):
@@ -135,3 +146,34 @@ def charm_path_from_root(charm_dir_name: str) -> Path:
     assert charms, f"No .charm file found for {charm_dir_name} in {charm_dir}"
     assert len(charms) == 1, f"Multiple .charm files found for {charm_dir_name} in {charm_dir}"
     return charms[0].absolute()
+
+
+RETRY_FOR_THREE_MINUTES = tenacity.Retrying(
+    wait=tenacity.wait_exponential(multiplier=1, min=1, max=15),
+    stop=tenacity.stop_after_delay(180),
+    reraise=True,
+)
+
+
+def get_ingress_url(lightkube_client, model_name: str) -> str:
+    """Return external ingress URL for the Istio Gateway."""
+    svc = lightkube_client.get(Service, "istio-ingressgateway-workload", namespace=model_name)
+    ingress = svc.status.loadBalancer.ingress[0]
+    if ingress.ip:
+        return f"http://{ingress.ip}.nip.io"
+    elif ingress.hostname:
+        return f"http://{ingress.hostname}"
+    else:
+        raise RuntimeError("No IP or hostname found in ingress service")
+
+
+def test_feast_ui_ingress_accessible(juju: jubilant.Juju, lightkube_client):
+    """Ensure that Feast UI is reachable through Ingress at /feast."""
+    base_url = get_ingress_url(lightkube_client, juju.model)
+    feast_url = f"{base_url}/feast/"
+
+    for attempt in RETRY_FOR_THREE_MINUTES:
+        with attempt:
+            response = requests.get(feast_url, timeout=10)
+            assert response.status_code == 200, f"Expected 200 OK, got {response.status_code}"
+            assert "Feast" in response.text or len(response.text) > 0, "Expected Feast UI content"

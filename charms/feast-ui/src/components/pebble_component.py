@@ -27,7 +27,7 @@ class FeastUIPebbleService(PebbleServiceComponent):
                     self.service_name: {
                         "override": "replace",
                         "summary": "Entry point for feast-ui image",
-                        "command": "feast ui",
+                        "command": "feast ui --host 0.0.0.0 --port 8888 --root_path /feast",
                         "startup": "enabled",
                         "working-dir": "/home/ubuntu",
                     }
