@@ -25,6 +25,7 @@ otf
 plantuml
 PNG
 PodDefault
+PodDefaults
 Pygments
 QEMU
 Rockcraft
