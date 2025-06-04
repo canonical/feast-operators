@@ -4,9 +4,11 @@ backends
 Charmcraft
 cjk
 cryptographically
+DashboardLink
 dvipng
 fonts
 freefont
+quickstart
 github
 GPG
 gyre
@@ -15,10 +17,14 @@ Intersphinx
 lang
 LaTeX
 latexmk
+materialize
+MLOps
 Multipass
+orchestrator
 otf
 plantuml
 PNG
+PodDefault
 Pygments
 QEMU
 Rockcraft
