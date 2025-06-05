@@ -28,8 +28,8 @@ Components
 
 The following components constitute a complete Charmed Feast deployment:
 
-Feast Integrator charm
-~~~~~~~~~~~~~~~~~~~~~~~~
+`Feast Integrator charm <https://charmhub.io/feast-integrator>`_
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 It acts as the central orchestrator by:
 
@@ -38,8 +38,8 @@ It acts as the central orchestrator by:
 - Creating a K8s secret and ``PodDefault`` to share this configuration with Notebooks.
 - Relating with the Resource Dispatcher to propagate configurations to the user namespace.
 
-Feast UI charm
-~~~~~~~~~~~~~~
+`Feast UI charm <https://charmhub.io/feast-ui>`_
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 It provides a web interface for browsing Feast objects, such as feature views and entities, by:
 
@@ -48,8 +48,8 @@ It provides a web interface for browsing Feast objects, such as feature views an
 - Sending a ``DashboardLink`` to the Kubeflow dashboard.
 - Using Istio Ingress for external access.
 
-PostgreSQL charms
-~~~~~~~~~~~~~~~~~~
+`PostgreSQL charms <https://charmhub.io/postgresql-k8s>`_
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Three PostgreSQL deployments are used:
 
@@ -59,10 +59,10 @@ Three PostgreSQL deployments are used:
 
 All PostgreSQL charms communicate with Feast via the ``postgresql_client`` interface.
 
-Resource Dispatcher charm
+Resource Dispatcher charm 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-`This charm <https://github.com/canonical/resource-dispatcher>`_` propagates ``feature_store.yaml`` and ``PodDefault`` to the user namespace, ensuring Notebooks can access Feast configurations.
+`This charm <https://github.com/canonical/resource-dispatcher>`_ propagates ``feature_store.yaml`` and ``PodDefault`` to the user namespace, ensuring Notebooks can access Feast configurations.
 
 User Notebooks
 ~~~~~~~~~~~~~~~
