@@ -28,8 +28,8 @@ Components
 
 The following components constitute a complete Charmed Feast deployment:
 
-`Feast Integrator charm <https://charmhub.io/feast-integrator>`_
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Feast Integrator charm
+^^^^^^^^^^^^^^^^^^^^^^^
 
 It acts as the central orchestrator by:
 
@@ -38,8 +38,10 @@ It acts as the central orchestrator by:
 - Creating a K8s secret and ``PodDefault`` to share this configuration with Notebooks.
 - Relating with the Resource Dispatcher to propagate configurations to the user namespace.
 
-`Feast UI charm <https://charmhub.io/feast-ui>`_
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+See `Feast Integrator <https://charmhub.io/feast-integrator>`_ for more details about this charm.
+
+Feast UI charm
+^^^^^^^^^^^^^^^
 
 It provides a web interface for browsing Feast objects, such as feature views and entities, by:
 
@@ -48,8 +50,10 @@ It provides a web interface for browsing Feast objects, such as feature views an
 - Sending a ``DashboardLink`` to the Kubeflow dashboard.
 - Using Istio Ingress for external access.
 
-`PostgreSQL charms <https://charmhub.io/postgresql-k8s>`_
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+See `Feast UI <https://charmhub.io/feast-ui>`_ for more details about this charm.
+
+PostgreSQL charms
+^^^^^^^^^^^^^^^^^^
 
 Three PostgreSQL deployments are used:
 
@@ -58,6 +62,7 @@ Three PostgreSQL deployments are used:
 - Registry: Stores metadata about feature definitions and entities.
 
 All PostgreSQL charms communicate with Feast via the ``postgresql_client`` interface.
+See `PostgreSQL <https://charmhub.io/postgresql-k8s>`_ for more details about this charm.
 
 Resource Dispatcher charm 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
