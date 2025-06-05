@@ -11,4 +11,4 @@ Contents
 .. toctree::
    :maxdepth: 1
 
-   reference_architecture
+   system_architecture
