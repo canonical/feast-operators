@@ -25,7 +25,7 @@ import yaml
 #
 # TODO: Update with the official name of your project or product
 
-project = "Feast operators"
+project = "Charmed Feast"
 author = "Canonical Ltd."
 
 
