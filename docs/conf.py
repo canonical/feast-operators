@@ -25,7 +25,7 @@ import yaml
 #
 # TODO: Update with the official name of your project or product
 
-project = "Feast operators"
+project = "Charmed Feast"
 author = "Canonical Ltd."
 
 
@@ -176,7 +176,7 @@ html_theme_options = {
 
 # Template and asset locations
 
-#html_static_path = ["_static"]
+html_static_path = ['reference/_static']
 #templates_path = ["_templates"]
 
 

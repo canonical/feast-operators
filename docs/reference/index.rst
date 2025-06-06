@@ -1,12 +1,9 @@
 Reference
 =========
 
-These documents provide an overview of different features of the starter pack.
+This section contains detailed technical reference materials related to Charmed Feast and its integration with Charmed Kubeflow.
 
-Also see the following information:
-
-- `Example product documentation`_ and `Example product documentation repository`_
-- `Sphinx documentation starter pack repository`_
+Use this section to understand the architectural decisions, charm components, and integration patterns that power the feature store solution.
 
 Contents
 --------
@@ -14,8 +11,4 @@ Contents
 .. toctree::
    :maxdepth: 1
 
-   automatic_checks
-   doc-cheat-sheet
-   doc-cheat-sheet-myst
-   style-guide
-   style-guide-myst
+   system_architecture
