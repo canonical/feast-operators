@@ -8,7 +8,7 @@ spec:
     matchLabels:
       access-feast: "true"
   env:
-    - name: FEAST_CONFIG_PATH
+    - name: FEAST_FS_YAML_FILE_PATH
       value: "/feast/feature_store.yaml"
   volumeMounts:
     - mountPath: /feast
