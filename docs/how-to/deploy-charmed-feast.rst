@@ -48,7 +48,7 @@ Apply the new group permissions:
 
 See the `MicroK8s getting started guide <https://microk8s.io/docs>`_ for more details.
 
-Enable MicroK8s add-ons:
+Enable MicroK8s addons:
 
 .. code-block:: bash
 
@@ -110,7 +110,7 @@ Install Terraform:
 
    sudo snap install terraform --classic
 
-Initialize and apply the deployment:
+Initialise and apply the deployment:
 
 .. code-block:: bash
 
