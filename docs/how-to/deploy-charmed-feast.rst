@@ -1,34 +1,37 @@
 Deploy Charmed Feast with Charmed Kubeflow
 ==========================================
 
-This guide describes how to get started with Charmed Kubeflow (CKF) and Charmed Feast using Terraform. It is intended for system administrators and MLOps engineers.
+This guide describes how to deploy Charmed Feast along with `Charmed Kubeflow (CKF) <https://charmed-kubeflow.io/docs>`_, 
+including requirements, environment setup, and deployment steps using Terraform. 
 
-CKF provides a simple, out-of-the-box way to deploy Kubeflow, and the Charmed Feast bundle adds a fully integrated feature store to that deployment. This tutorial will walk you through the requirements, environment setup, and deployment steps using Terraform.
+.. note::
+   This content is intended for system administrators and MLOps engineers.
 
-For more information, see the `Charmed Kubeflow documentation <https://charmed-kubeflow.io/docs>`_.
+CKF provides a simple, out-of-the-box way to deploy Kubeflow.
+Charmed Feast bundle adds a fully integrated feature store to that deployment. 
 
 Requirements
 ------------
 
-- Ubuntu 22.04 or later
+- Ubuntu 22.04 or later.
 - A host machine with at least:
 
-  - 4-core CPU processor
-  - 32 GB RAM
-  - 50 GB available disk space
+  - 4-core CPU processor.
+  - 32 GB RAM.
+  - 50 GB available disk space.
 
 Install and configure dependencies
 ----------------------------------
 
 CKF relies on:
 
-- **Kubernetes (K8s)** – This tutorial uses **MicroK8s**, a zero-ops Kubernetes distribution.
-- **Juju** – A software orchestration engine used to deploy and manage Charmed Kubeflow and Charmed Feast.
+- Kubernetes (K8s): This tutorial uses `MicroK8s <https://microk8s.io/docs>`_, a zero-ops Kubernetes distribution.
+- `Juju <https://juju.is/>`_: A software orchestration engine used to deploy and manage Charmed Feast and CKF.
 
 Install MicroK8s
-----------------
+^^^^^^^^^^^^^^^^
 
-Install MicroK8s using Snap:
+Install MicroK8s using `Snapcraft <https://snapcraft.io/>`_:
 
 .. code-block:: bash
 
@@ -46,7 +49,7 @@ Apply the new group permissions:
 
    newgrp microk8s
 
-See the `MicroK8s getting started guide <https://microk8s.io/docs>`_ for more details.
+See `Get started with MicroK8s <https://microk8s.io/docs/getting-started>`_ for more details.
 
 Enable MicroK8s addons:
 
@@ -61,24 +64,24 @@ Check the status:
    microk8s status
 
 Install Juju
-------------
+^^^^^^^^^^^^^
 
-Install Juju using Snap:
+Install Juju using Snapcraft:
 
 .. code-block:: bash
 
    sudo snap install juju --channel=3.6/stable
 
-Ensure required local directory exists:
+Ensure the required local directory exists:
 
 .. code-block:: bash
 
    mkdir -p ~/.local/share
 
-See the `Juju getting started guide <https://juju.is/docs>`_ for more information.
+See `Get started with Juju <https://documentation.ubuntu.com/juju/3.6/tutorial/>`_ for more details.
 
 Configure Juju
---------------
+^^^^^^^^^^^^^^^
 
 Add your MicroK8s cluster to Juju:
 
@@ -92,12 +95,12 @@ Bootstrap a Juju controller:
 
    juju bootstrap my-k8s uk8sx
 
-Deploy Charmed Kubeflow and Charmed Feast
------------------------------------------
+Deploy Charmed Feast along with CKF
+------------------------------------
 
-The Charmed Kubeflow and Charmed Feast bundles can be deployed together using Terraform.
+You can deploy Charmed Feast together with CKF using Terraform.
 
-Clone the solution repository:
+Start by cloning the solution repository:
 
 .. code-block:: bash
 
@@ -117,13 +120,17 @@ Initialise and apply the deployment:
    terraform init
    terraform apply -auto-approve
 
-This process may take several minutes. Once complete, both Charmed Kubeflow and Charmed Feast will be fully deployed and integrated.
+.. note:: 
+   This process may take several minutes. 
 
-Wait for components to become ready
------------------------------------
+Once completed, both Charmed Feast and CKF will be fully deployed and integrated.
+
+Check component status
+------------------------
 
 After the deployment, the bundle components need some time to initialise and establish communication with each other.
-This process may take up to 20 minutes.
+.. note::
+   This process may take up to 20 minutes.
 
 Check the status of the components as follows:
 
@@ -159,15 +166,15 @@ You should expect an output like this:
    feast-registry/0*           active    idle   10.1.202.123                 Primary
    feast-ui/0*                 active    idle   10.1.202.121         
 
-CKF is ready when all the applications and units are in **active** status. During the configuration process,
-some components may temporarily show a **blocked** or **error** state — this is expected and usually resolves automatically.
+CKF is ready when all the applications and units are in ``active`` status. 
+During the configuration process, some components may temporarily show a ``blocked`` or ``error`` state, which is expected and usually resolves automatically.
 
 Access your deployment
 ----------------------
 
 You can interact with CKF using a web dashboard accessible via an IP address.
 
-Set dashboard login credentials:
+Set the dashboard login credentials:
 
 .. code-block:: bash
 
@@ -180,27 +187,30 @@ Retrieve the dashboard IP address:
 
    microk8s kubectl -n kubeflow get svc istio-ingressgateway-workload -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
 
-You should see something like:
+You should see something like the following:
 
 .. code-block:: none
 
    10.64.140.43
 
-Visit the IP address in your browser. Use `admin` as the username and password on the login page (set in the previous step).
+Navigate to the IP address in your browser. 
+Use the credentials previously set: 
 
 .. figure:: /how-to/_static/kubeflow_first_screen.png
    :alt: Kubeflow first login screen
    :align: center
    :width: 80%
 
-Once logged in, you should see the Kubeflow welcome page. Click **Start Setup**, then create a namespace for your work, and click **Finish** to continue to the dashboard.
+Once logged in, you should see the Kubeflow welcome page. 
+Click ``Start Setup``, create a namespace for your work, and finally click ``Finish`` to continue to the dashboard:
 
 .. figure:: /how-to/_static/kubeflow_second_screen.png
    :alt: Kubeflow first login screen
    :align: center
    :width: 80%
 
-You will see a **Feast** tab in the left-hand sidebar. This provides access to the Charmed Feast UI directly from the Kubeflow Dashboard.
+You will see a ``Feast`` tab in the left-hand sidebar. 
+This provides access to the Charmed Feast User Interface directly from the Kubeflow dashboard:
 
 .. figure:: /how-to/_static/kubeflow_dashboard_screen.png
    :alt: Kubeflow first login screen
