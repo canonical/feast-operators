@@ -129,6 +129,7 @@ Check component status
 ------------------------
 
 After the deployment, the bundle components need some time to initialise and establish communication with each other.
+
 .. note::
    This process may take up to 20 minutes.
 
