@@ -1,8 +1,8 @@
-Get started with Charmed Feast on Charmed Kubeflow
-==================================================
+Get started 
+============
 
 This guide describes how to deploy Charmed Feast along with `Charmed Kubeflow (CKF) <https://charmed-kubeflow.io/docs>`_, 
-including requirements, environment setup, and deployment steps using Terraform. 
+including requirements, environment setup, and deployment steps using `Terraform <https://developer.hashicorp.com/terraform>`_. 
 
 .. note::
    This content is intended for system administrators and MLOps engineers.
@@ -98,7 +98,7 @@ Bootstrap a Juju controller:
 Deploy Charmed Feast along with CKF
 ------------------------------------
 
-You can deploy Charmed Feast together with CKF using `Terraform <https://developer.hashicorp.com/terraform>`_.
+You can deploy Charmed Feast together with CKF using Terraform. 
 
 Start by cloning the solution repository:
 
@@ -201,4 +201,4 @@ Once logged in, you should see the Kubeflow welcome page.
 Click ``Start Setup``, create a namespace for your work, and finally click ``Finish`` to continue to the dashboard.
 
 You will see a ``Feast`` tab in the left-hand sidebar. 
-This provides access to the Charmed Feast User Interface directly from the Kubeflow dashboard.
+It provides access to the Charmed Feast User Interface directly from the Kubeflow dashboard.

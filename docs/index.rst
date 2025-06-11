@@ -9,7 +9,7 @@ It contains common styling and configuration through the `Canonical Sphinx`_ ext
    :hidden:
    :maxdepth: 2
 
-   Tutorials </tutorial/index>
+   Tutorial </tutorial/index>
    How to <how-to/index>
    Reference </reference/index>
 

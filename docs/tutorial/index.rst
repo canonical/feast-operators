@@ -1,11 +1,9 @@
-Tutorials
+Tutorial
 =========
 
+The following guide provides a step-by-step tutorial to get you started with Charmed Feast.
 
-The following guides provide a step-by-step tutorial to get you started with Charmed Feast.
-
-Contents
---------
+Learn about its dependencies, how to deploy and access it:
 
 .. toctree::
    :maxdepth: 1
