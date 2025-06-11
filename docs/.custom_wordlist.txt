@@ -9,16 +9,19 @@ DashboardLink
 dvipng
 fonts
 freefont
+FS
 quickstart
 github
 GPG
 gyre
 https
 Intersphinx
+kubeflow
 lang
 LaTeX
 latexmk
 materialize
+materializing
 MLOps
 Multipass
 orchestrator
@@ -46,3 +49,4 @@ whitespaces
 wordlist
 xetex
 xindy
+yaml

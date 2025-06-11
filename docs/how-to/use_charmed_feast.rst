@@ -36,7 +36,7 @@ Inside the Notebook, install the required packages:
 .. tip::
 
    Curious users can explore a full example Notebook in our user acceptance tests:
-   `charmed-kubeflow-uats – feast integration notebook <https://github.com/canonical/charmed-kubeflow-uats/blob/main/tests/notebooks/cpu/feast/feast-integration.ipynb>`_
+   `feast integration notebook <https://github.com/canonical/charmed-kubeflow-uats/blob/main/tests/notebooks/cpu/feast/feast-integration.ipynb>`_
 
 Define and register features using Feast apply
 ----------------------------------------------
