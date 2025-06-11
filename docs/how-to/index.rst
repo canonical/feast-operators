@@ -3,8 +3,7 @@ How-to guides
 
 The following guides cover key processes and common tasks for managing and using Charmed Feast.
 
-Contents
---------
+Learn how to interact with Charmed Feast from Charmed Kubeflow dashboard:
 
 .. toctree::
    :maxdepth: 1
