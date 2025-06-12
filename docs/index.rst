@@ -37,7 +37,7 @@ In this documentation
       :link: /how-to/index
       :link-type: doc
 
-      Step-by-step guides covering key operations and common tasks, from Notebook setup to CLI usage.
+      Step-by-step guides covering key operations and common tasks.
 
 .. grid:: 1 1 2 2
 
@@ -45,4 +45,4 @@ In this documentation
       :link: /explanation/index
       :link-type: doc
 
-      Discussion and clarification of core topics, including system architecture and integration details.
+      Discussion and clarification of core topics, including system architecture and integrations.
