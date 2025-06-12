@@ -4,7 +4,7 @@ Charmed Feast documentation
 
 Charmed Feast is a fully managed, Charmed Operator-based deployment of the Feast feature store, built for seamless integration with Charmed Kubeflow.
 
-It simplifies the deployment and lifecycle management of Feast components using Juju, and connects directly to Kubeflow Notebooks, enabling feature registration and retrieval from a familiar ML environment.
+It simplifies the deployment and life cycle management of Feast components using Juju, and connects directly to Kubeflow Notebooks, enabling feature registration and retrieval from a familiar ML environment.
 
 Charmed Feast helps data scientists and MLOps engineers bridge the gap between data engineering and model deployment, by streamlining feature management across training and inference workflows.
 
