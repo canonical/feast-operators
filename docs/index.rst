@@ -17,7 +17,6 @@ This solution is ideal for teams using Charmed Kubeflow that need a robust, prod
    Tutorial </tutorial/index>
    How-to guides </how-to/index>
    Explanation </explanation/index>
-   Reference </reference/index>
 
 In this documentation
 ---------------------
@@ -38,8 +37,8 @@ In this documentation
 
 .. grid:: 1 1 2 2
 
-   .. grid-item-card:: Reference
-      :link: /reference/index
+   .. grid-item-card:: Explanation
+      :link: /explanation/index
       :link-type: doc
 
-      Technical details, charm interfaces, deployment specs, and configuration options.
+      Discussion and clarification of core topics, including system architecture and integration details.
