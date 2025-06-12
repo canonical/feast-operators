@@ -45,4 +45,4 @@ In this documentation
       :link: /explanation/index
       :link-type: doc
 
-      Discussion and clarification of core topics, including system architecture and integrations.
+      Discussion and clarification of core topics.
