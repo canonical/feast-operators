@@ -11,7 +11,7 @@ It contains common styling and configuration through the `Canonical Sphinx`_ ext
 
    Tutorial </tutorial/index>
    How to <how-to/index>
-   Reference </reference/index>
+   Explanation </explanation/index>
 
 In this documentation
 ---------------------
@@ -22,18 +22,18 @@ In this documentation
       :link: /tutorial/index
       :link-type: doc
 
-      **Get started** - use Sphinx and Read the Docs to host and test your documentation.
+      Get started - a hands-on introduction to Charmed Feast for newcomers.
 
    .. grid-item-card:: How-to guides
       :link: /how-to/index
       :link-type: doc
 
-      **Step-by-step guides** - learn key operations and customisation.
+      Step-by-step guides covering key operations and common tasks with Charmed Feast.
 
 .. grid:: 1 1 2 2
 
-   .. grid-item-card:: Reference
-      :link: /reference/index
+   .. grid-item-card:: Explanation
+      :link: /explanation/index
       :link-type: doc
 
-      **Technical information** - understand the automatic checks and Sphinx capabilities.
+      Discussion and clarification of key topics.
