@@ -1,16 +1,25 @@
+
 Charmed Feast documentation
-============================
+===========================
 
-The documentation starter pack helps you to quickly set up, build, and publish documentation with Sphinx.
+Charmed Feast is a fully managed, `charm <https://documentation.ubuntu.com/juju/3.6/reference/charm/#charm>`_-based deployment of the `Feast <https://docs.feast.dev/>`_ feature store, 
+designed for seamless integration with `Charmed Kubeflow <https://charmed-kubeflow.io/>`_.
 
-It contains common styling and configuration through the `Canonical Sphinx`_ extension, supports both |RST| and Markdown, and includes automatic documentation checks.
+It simplifies the deployment and lifecycle management of Feast components using `Juju <https://juju.is/>`_, 
+and connects directly to Kubeflow Notebooks, enabling feature registration and retrieval from a familiar Machine Learning environment.
+
+Charmed Feast helps data scientists and MLOps engineers bridge the gap between data engineering and model deployment, 
+by streamlining feature management across training and inference workflows.
+
+This solution is ideal for teams using Charmed Kubeflow that need a robust, 
+production-ready feature store backed by PostgreSQL for both online and offline retrieval use cases.
 
 .. toctree::
    :hidden:
    :maxdepth: 2
 
    Tutorial </tutorial/index>
-   How to <how-to/index>
+   How to </how-to/index>
    Explanation </explanation/index>
 
 In this documentation
@@ -22,13 +31,13 @@ In this documentation
       :link: /tutorial/index
       :link-type: doc
 
-      Get started - a hands-on introduction to Charmed Feast for newcomers.
+      Get started - a hands-on introduction to Charmed Feast for new users.
 
    .. grid-item-card:: How-to guides
       :link: /how-to/index
       :link-type: doc
 
-      Step-by-step guides covering key operations and common tasks with Charmed Feast.
+      Step-by-step guides covering key operations and common tasks.
 
 .. grid:: 1 1 2 2
 
@@ -36,4 +45,4 @@ In this documentation
       :link: /explanation/index
       :link-type: doc
 
-      Discussion and clarification of key topics.
+      Discussion and clarification of core topics.
