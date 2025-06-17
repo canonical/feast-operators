@@ -1,4 +1,3 @@
-
 Use Charmed Feast from Charmed Kubeflow
 ========================================
 
@@ -11,18 +10,18 @@ Set up a Notebook for Charmed Feast
 2. Click ``Create a new notebook``.
 3. Fill in the required fields such as:
    - ``Notebook name``.
-   - ``Notebook image``.
+   - ``Notebook image``. You can use the default ``scipy`` notebook image, which includes all necessary Feast dependencies.
 4. Expand ``Advanced configuration``.
-5. Under configuration options, check ``Allow access to Feast``.
+5. Under configuration options, check ``Allow access to Feast``. **This step is required for all notebook images.**
 6. Click ``Create`` to launch the Notebook.
 
 .. note::
    Once the Notebook is running, click ``Connect`` to open the environment.
 
-Install Python dependencies
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Install Python dependencies (if needed)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Inside the Notebook, install the required package dependencies:
+If you are **not** using the ``scipy`` notebook image, you must manually install the required package dependencies inside the Notebook:
 
 .. code-block:: bash
 
