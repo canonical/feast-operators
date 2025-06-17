@@ -9,8 +9,10 @@ Set up a Notebook for Charmed Feast
 1. From the CKF dashboard, select ``Notebooks`` in the sidebar.
 2. Click ``Create a new notebook``.
 3. Fill in the required fields such as:
+
    - ``Notebook name``.
    - ``Notebook image``: You can use the default ``scipy`` notebook image, which includes all necessary Feast dependencies.
+   
 4. Expand ``Advanced configuration``.
 5. Under configuration options, check ``Allow access to Feast``. 
 
