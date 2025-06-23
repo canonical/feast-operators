@@ -18,9 +18,9 @@ production-ready feature store backed by PostgreSQL for both online and offline 
    :hidden:
    :maxdepth: 2
 
-   Tutorial </tutorial/index>
-   How to </how-to/index>
-   Explanation </explanation/index>
+   Get started </tutorial/get-started>
+   How to use it from Charmed Kubeflow </how-to/use>
+   System architecture </explanation/system-architecture>
 
 In this documentation
 ---------------------
@@ -28,21 +28,21 @@ In this documentation
 .. grid:: 1 1 2 2
 
    .. grid-item-card:: Tutorial
-      :link: /tutorial/index
+      :link: /tutorial/get-started
       :link-type: doc
 
-      Get started - a hands-on introduction to Charmed Feast for new users.
+      Get started with Charmed Feast.
 
-   .. grid-item-card:: How-to guides
-      :link: /how-to/index
+   .. grid-item-card:: How-to guide
+      :link: /how-to/use
       :link-type: doc
 
-      Step-by-step guides covering key operations and common tasks.
+      Learn how to interact with Charmed Feast from Charmed Kubeflow dashboard.
 
 .. grid:: 1 1 2 2
 
    .. grid-item-card:: Explanation
-      :link: /explanation/index
+      :link: /explanation/system-architecture
       :link-type: doc
 
-      Discussion and clarification of core topics.
+      Learn about its system architecture.

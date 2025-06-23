@@ -254,6 +254,7 @@ extensions = [
     "sphinxcontrib.cairosvgconverter",
     "sphinx_last_updated_by_git",
     "sphinx.ext.intersphinx",
+    'sphinx_sitemap'
 ]
 
 # Excludes files or directories from processing
@@ -330,3 +331,9 @@ if os.path.exists('./reuse/substitutions.yaml'):
 intersphinx_mapping = {
     'starter-pack': ('https://canonical-example-product-documentation.readthedocs-hosted.com/en/latest', None)
 }
+
+# Sitemap configuration
+#######################
+
+html_baseurl = 'https://documentation.ubuntu.com/charmed-feast/'
+sitemap_url_scheme = "{link}"
