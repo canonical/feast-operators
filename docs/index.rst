@@ -45,4 +45,4 @@ In this documentation
       :link: /explanation/system-architecture
       :link-type: doc
 
-      Learn about its system architecture.
+      Learn about Charmed Feast system architecture.
