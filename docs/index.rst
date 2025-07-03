@@ -46,3 +46,14 @@ In this documentation
       :link-type: doc
 
       Learn about Charmed Feast system architecture.
+
+
+Project and community
+---------------------
+
+Charmed Feast is an open-source project that values its community. 
+Contributions, suggestions, fixes, and constructive feedback are welcome from everyone.
+
+* Read our `Code of conduct`_.
+* `Contribute <https://github.com/canonical/feast-operators>`_ and `report bugs <https://github.com/canonical/feast-operators/issues>`_.
+* Talk to us on `Matrix`_.

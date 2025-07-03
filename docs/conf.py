@@ -176,8 +176,8 @@ html_theme_options = {
 
 # Template and asset locations
 
-html_static_path = ['explanation/_static']
-#templates_path = ["_templates"]
+html_static_path = ["_static"]
+templates_path = ["_templates"]
 
 
 #############
@@ -206,7 +206,8 @@ redirects = {}
 
 linkcheck_ignore = [
     "http://127.0.0.1:8000",
-    "https://github.com/canonical/ACME/*"
+    "https://github.com/canonical/ACME/*",
+    "https://matrix.to/#/#charmhub-mlops-kubeflow:ubuntu.com"
     ]
 
 
@@ -265,12 +266,16 @@ exclude_patterns = [
 
 # Adds custom CSS files, located under 'html_static_path'
 
-# html_css_files = []
+html_css_files = [
+    "css/cookie-banner.css",
+]
 
 
 # Adds custom JavaScript files, located under 'html_static_path'
 
-# html_js_files = []
+html_js_files = [
+    "js/bundle.js"
+]
 
 
 # Specifies a reST snippet to be appended to each .rst file
