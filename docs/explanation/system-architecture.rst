@@ -6,7 +6,7 @@ System architecture
 Charmed Feast provides a feature store solution tailored for MLOps workflows on `Charmed Kubeflow <https://charmed-kubeflow.io/docs>`_. 
 It leverages `Juju <https://juju.is/>`_ to manage Feast components and integrates seamlessly with Kubeflow Notebooks for end-to-end machine learning use cases.
 
-.. figure:: /explanation/_static/feast.drawio.png
+.. figure:: /_static/feast.drawio.png
    :alt: Feast Architecture Diagram
    :align: center
    :width: 80%
