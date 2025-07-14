@@ -1,21 +1,17 @@
+[project]
+name = "feast-operators"
+requires-python = ">=3.12,<4.0"
+
 [tool.poetry]
 package-mode = false
 
-[tool.poetry.dependencies]
-python = "^3.12"
+[tool.poetry.group.charm]
+optional = true
+
+[tool.poetry.group.charm.dependencies]
 charmed-kubeflow-chisme = "^0.4.9"
 lightkube = "^0.17.1"
 ops = "^2.20.0"
-
-[tool.poetry.group.charm-libs.dependencies]
-ops = "^2.20.0"
-
-# update-requirements
-[tool.poetry.group.update-requirements]
-optional = true
-
-[tool.poetry.group.update-requirements.dependencies]
-poetry-plugin-export = "^1.9.0"
 
 # format
 [tool.poetry.group.fmt]
