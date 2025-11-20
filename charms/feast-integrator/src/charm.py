@@ -124,7 +124,7 @@ class FeastIntegratorCharm(ops.CharmBase):
         )
 
         self.charm_reconciler.install_default_event_handlers()
-
+#test
 
 if __name__ == "__main__":  # pragma: nocover
     ops.main(FeastIntegratorCharm)
