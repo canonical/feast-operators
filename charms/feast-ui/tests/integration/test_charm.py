@@ -7,6 +7,11 @@ import pytest
 import requests
 import tenacity
 import yaml
+from charmed_kubeflow_chisme.testing import (
+    assert_security_context,
+    generate_container_securitycontext_map,
+    get_pod_names,
+)
 from charms_dependencies import (
     ADMISSION_WEBHOOK,
     FEAST_INTEGRATOR,
@@ -26,6 +31,7 @@ METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 IMAGE = METADATA["resources"]["oci-image"]["upstream-source"]
 CHARM_NAME = METADATA["name"]
 FEAST_DBS_NAMES = ["offline-store", "online-store", "registry"]
+CONTAINERS_SECURITY_CONTEXT_MAP = generate_container_securitycontext_map(METADATA)
 
 
 @pytest.fixture(scope="session")
@@ -34,7 +40,7 @@ def lightkube_client() -> lightkube.Client:
     return client
 
 
-def test_deploy_charm(juju: jubilant.Juju, request):
+def test_deploy_charm(juju: jubilant.Juju, request: pytest.FixtureRequest):
     """Deploy Feast UI charm and required dependencies."""
     juju.deploy(
         charm=request.config.getoption("--charm-path"),
@@ -155,7 +161,7 @@ RETRY_FOR_THREE_MINUTES = tenacity.Retrying(
 )
 
 
-def get_ingress_url(lightkube_client, model_name: str) -> str:
+def get_ingress_url(lightkube_client: lightkube.Client, model_name: str) -> str:
     """Return external ingress URL for the Istio Gateway."""
     svc = lightkube_client.get(Service, "istio-ingressgateway-workload", namespace=model_name)
     ingress = svc.status.loadBalancer.ingress[0]
@@ -167,7 +173,7 @@ def get_ingress_url(lightkube_client, model_name: str) -> str:
         raise RuntimeError("No IP or hostname found in ingress service")
 
 
-def test_feast_ui_ingress_accessible(juju: jubilant.Juju, lightkube_client):
+def test_feast_ui_ingress_accessible(juju: jubilant.Juju, lightkube_client: lightkube.Client):
     """Ensure that Feast UI is reachable through Ingress at /feast."""
     base_url = get_ingress_url(lightkube_client, juju.model)
     feast_url = f"{base_url}/feast/"
@@ -177,3 +183,24 @@ def test_feast_ui_ingress_accessible(juju: jubilant.Juju, lightkube_client):
             response = requests.get(feast_url, timeout=10)
             assert response.status_code == 200, f"Expected 200 OK, got {response.status_code}"
             assert "Feast" in response.text or len(response.text) > 0, "Expected Feast UI content"
+
+
+@pytest.mark.parametrize("container_name", list(CONTAINERS_SECURITY_CONTEXT_MAP.keys()))
+def test_container_security_context(
+    juju: jubilant.Juju,
+    lightkube_client: lightkube.Client,
+    container_name: str,
+):
+    """Test container security context is correctly set.
+
+    Verify that container spec defines the security context with correct
+    user ID and group ID.
+    """
+    pod_name = get_pod_names(juju.model, CHARM_NAME)[0]
+    assert_security_context(
+        lightkube_client,
+        pod_name,
+        container_name,
+        CONTAINERS_SECURITY_CONTEXT_MAP,
+        juju.model,
+    )
