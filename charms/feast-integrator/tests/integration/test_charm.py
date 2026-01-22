@@ -2,12 +2,18 @@ import logging
 from pathlib import Path
 
 import jubilant
+import lightkube
 import pytest
 import tenacity
 import yaml
 from charmed_kubeflow_chisme.kubernetes import (
     KubernetesResourceHandler,
     create_charm_default_labels,
+)
+from charmed_kubeflow_chisme.testing import (
+    assert_security_context,
+    generate_container_securitycontext_map,
+    get_pod_names,
 )
 from lightkube.generic_resource import create_namespaced_resource
 from lightkube.resources.core_v1 import Namespace, Secret
@@ -35,6 +41,14 @@ PODDEFAULT_NAME = f"{CHARM_NAME}-access-feast"
 PodDefault = create_namespaced_resource("kubeflow.org", "v1alpha1", "PodDefault", "poddefaults")
 
 TESTER_CHARM_NAME = "configuration-requirer-tester"
+
+CONTAINERS_SECURITY_CONTEXT_MAP = generate_container_securitycontext_map(METADATA)
+
+
+@pytest.fixture(scope="session")
+def lightkube_client() -> lightkube.Client:
+    client = lightkube.Client(field_manager=CHARM_NAME)
+    return client
 
 
 @pytest.fixture(scope="module")
@@ -259,3 +273,24 @@ def extract_feast_yaml_from_logs(log_output: str) -> str:
         raise ValueError("Feast configuration YAML block not found in logs")
 
     return "\n".join(feast_yaml_lines)
+
+
+@pytest.mark.parametrize("container_name", list(CONTAINERS_SECURITY_CONTEXT_MAP.keys()))
+def test_container_security_context(
+    juju: jubilant.Juju,
+    lightkube_client: lightkube.Client,
+    container_name: str,
+):
+    """Test container security context is correctly set.
+
+    Verify that container spec defines the security context with correct
+    user ID and group ID.
+    """
+    pod_name = get_pod_names(juju.model, CHARM_NAME)[0]
+    assert_security_context(
+        lightkube_client,
+        pod_name,
+        container_name,
+        CONTAINERS_SECURITY_CONTEXT_MAP,
+        juju.model,
+    )
