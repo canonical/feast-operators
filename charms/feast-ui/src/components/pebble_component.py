@@ -14,8 +14,8 @@ class FeastUIPebbleService(PebbleServiceComponent):
     """Pebble service component for Feast UI."""
 
     def __init__(self, app_port: int, *args, **kwargs):
-        super().__init__(self, *args, **kwargs)
-        self.app_port = app_port
+        super().__init__(*args, **kwargs)
+        self.app_port = 
 
     def get_layer(self) -> Layer:
         """Return Pebble layer configuration for the service.
