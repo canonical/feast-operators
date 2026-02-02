@@ -97,7 +97,7 @@ class FeastUICharm(CharmBase):
                 path_matched_prefix=INGRESS_PATH_MATCHED_PREFIX,
                 path_rewritten_prefix=INGRESS_PATH_REWRITTEN_PREFIX,
                 relation_name=INGRESS_MODES_TO_RELATION_NAMES["ambient"],
-                service_name=self._ingress_target_k8s_service_name(),
+                service_name=self._ingress_target_k8s_service_name,
                 service_port=K8S_SERVICE_HTTP_PORT,
             ),
             depends_on=[self.leadership_gate, self.istio_relations_conflict_detector],
@@ -111,7 +111,7 @@ class FeastUICharm(CharmBase):
                 data_to_send={
                     "prefix": INGRESS_PATH_MATCHED_PREFIX,
                     "rewrite": INGRESS_PATH_REWRITTEN_PREFIX,
-                    "service": self._ingress_target_k8s_service_name(),
+                    "service": self._ingress_target_k8s_service_name,
                     "namespace": self.model.name,
                     "port": K8S_SERVICE_HTTP_PORT,
                 },
