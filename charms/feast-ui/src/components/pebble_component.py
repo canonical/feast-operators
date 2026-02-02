@@ -13,6 +13,10 @@ logger = logging.getLogger(__name__)
 class FeastUIPebbleService(PebbleServiceComponent):
     """Pebble service component for Feast UI."""
 
+    def __init__(self, app_port: int, *args, **kwargs):
+        super().__init__(self, *args, **kwargs)
+        self.app_port = app_port
+
     def get_layer(self) -> Layer:
         """Return Pebble layer configuration for the service.
 
@@ -27,7 +31,9 @@ class FeastUIPebbleService(PebbleServiceComponent):
                     self.service_name: {
                         "override": "replace",
                         "summary": "Entry point for feast-ui image",
-                        "command": "feast ui --host 0.0.0.0 --port 8888 --root_path /feast",
+                        "command": (
+                            f"feast ui --host 0.0.0.0 --port {self.app_port} --root_path /feast"
+                        ),
                         "startup": "enabled",
                         "working-dir": "/home/ubuntu",
                     }
