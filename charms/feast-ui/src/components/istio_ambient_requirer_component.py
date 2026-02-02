@@ -1,3 +1,7 @@
+# Copyright 2026 Canonical Ltd.
+
+"""Component to manage the required relations to Istio when in ambient mode."""
+
 from logging import getLogger
 
 from charmed_kubeflow_chisme.components import Component
@@ -91,7 +95,7 @@ class AmbientIngressRequirerComponent(Component):
         else:
             logger.debug("Ambient ingress relation not ready, skipping config submission.")
 
-    def get_status(self):
+    def get_status(self):  # noqa: D102
         # This component depends on LeadershipGateComponent so no need to check for leadership here
         # If ingress config failed, the `_configure_app_leader` method raises an error
         # Otherwise simply return ActiveStatus()

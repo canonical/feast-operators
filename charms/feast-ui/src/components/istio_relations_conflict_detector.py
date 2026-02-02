@@ -1,3 +1,7 @@
+# Copyright 2026 Canonical Ltd.
+
+"""Component to detect conflicting Istio relations."""
+
 from logging import getLogger
 
 from charmed_kubeflow_chisme.components import Component
@@ -20,7 +24,7 @@ class IstioRelationsConflictDetectorComponent(Component):
         self.sidecar_relation_name = sidecar_relation_name
         self.ambient_relation_name = ambient_relation_name
 
-    def get_status(self) -> StatusBase:
+    def get_status(self) -> StatusBase:  # noqa: D102
         """Check that ambient and sidecar relations are not present simultaneously."""
         ambient_relation = self._charm.model.get_relation(self.ambient_relation_name)
         sidecar_relation = self._charm.model.get_relation(self.sidecar_relation_name)
