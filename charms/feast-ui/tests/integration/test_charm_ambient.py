@@ -8,6 +8,7 @@ import requests
 import tenacity
 import yaml
 from charmed_kubeflow_chisme.testing import (
+    CharmSpec,
     assert_path_reachable_through_ingress,
     assert_security_context,
     generate_container_securitycontext_map,
@@ -29,11 +30,31 @@ from lightkube.resources.core_v1 import Service
 logger = logging.getLogger(__name__)
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
-IMAGE = METADATA["resources"]["oci-image"]["upstream-source"]
 CHARM_NAME = METADATA["name"]
-FEAST_DBS_NAMES = ["offline-store", "online-store", "registry"]
+IMAGE = METADATA["resources"]["oci-image"]["upstream-source"]
 CONTAINERS_SECURITY_CONTEXT_MAP = generate_container_securitycontext_map(METADATA)
+FEAST_DBS_NAMES = ["offline-store", "online-store", "registry"]
 HTTP_PATH = "/feast/"
+ISTIO_BEACON_K8S_APP = "istio-beacon-k8s"
+ISTIO_INGRESS_K8S_APP = "istio-ingress-k8s"
+ISTIO_INGRESS_ROUTE_ENDPOINT = "istio-ingress-route"
+RETRY_FOR_THREE_MINUTES = tenacity.Retrying(
+    wait=tenacity.wait_exponential(multiplier=1, min=1, max=15),
+    stop=tenacity.stop_after_delay(180),
+    reraise=True,
+)
+SERVICE_MESH_ENDPOINT = "service-mesh"
+
+
+def charm_path_from_root(charm_dir_name: str) -> Path:
+    """Return absolute path to the built charm file for a given charm directory name."""
+    repo_root = Path(__file__).resolve().parents[4]
+    charm_dir = repo_root / "charms" / charm_dir_name
+
+    charms = list(charm_dir.glob(f"{charm_dir_name}_*.charm"))
+    assert charms, f"No .charm file found for {charm_dir_name} in {charm_dir}"
+    assert len(charms) == 1, f"Multiple .charm files found for {charm_dir_name} in {charm_dir}"
+    return charms[0].absolute()
 
 
 @pytest.fixture(scope="session")
@@ -125,55 +146,33 @@ def test_deploy_charm(juju: jubilant.Juju, request: pytest.FixtureRequest):
 
 
 def test_ingress_setup(juju: jubilant.Juju):
-    """Deploy Istio in ambient mode and relate it with Feast UI ingress interface."""
-    # Deploy istio ambient charms and add relations
-    await deploy_and_integrate_service_mesh_charms(APP_NAME, ops_test.model)
+    """Deploy Istio in ambient mode and integrate it with all charms and with the UI's ingress."""
 
-    # Integrate dependency charms with the service mesh
-    await integrate_with_service_mesh(
-        KFP_VIZ.charm, ops_test.model, relate_to_ingress_route_endpoint=False
-    )
-    await integrate_with_service_mesh(
-        KFP_API.charm, ops_test.model, relate_to_ingress_route_endpoint=False
-    )
-
-
-
-    for spec in [ISTIO_GATEWAY, ISTIO_PILOT]:
-        juju.deploy(
-            charm=spec.charm,
-            channel=spec.channel,
-            config=spec.config,
-            trust=spec.trust,
+    # integrating all charms with the service mesh:
+    for charm in (
+        ADMISSION_WEBHOOK,
+        CHARM_NAME,
+        *FEAST_DBS_NAMES,
+        FEAST_INTEGRATOR,
+        METACONTROLLER,
+        RESOURCE_DISPATCHER,
+    ):
+        if isinstance(charm, CharmSpec):
+            charm = charm.charm
+        juju.integrate(
+            f"{ISTIO_BEACON_K8S_APP}:{SERVICE_MESH_ENDPOINT}",
+            f"{charm}:{SERVICE_MESH_ENDPOINT}",
         )
-
-    juju.integrate(ISTIO_PILOT.charm, ISTIO_GATEWAY.charm)
-
-    logger.info("Waiting for istio charms to be active..")
-    juju.wait(lambda status: status.apps[ISTIO_GATEWAY.charm].is_active, successes=1)
-    juju.wait(lambda status: status.apps[ISTIO_PILOT.charm].is_active, successes=1)
-
-    juju.integrate(f"{ISTIO_PILOT.charm}:ingress", f"{CHARM_NAME}:ingress")
-    logger.info("Waiting for all charms to be active..")
+    logger.info("Waiting for all charms to be active after entering the service mesh...")
     juju.wait(jubilant.all_active, successes=1)
 
-
-def charm_path_from_root(charm_dir_name: str) -> Path:
-    """Return absolute path to the built charm file for a given charm directory name."""
-    repo_root = Path(__file__).resolve().parents[4]
-    charm_dir = repo_root / "charms" / charm_dir_name
-
-    charms = list(charm_dir.glob(f"{charm_dir_name}_*.charm"))
-    assert charms, f"No .charm file found for {charm_dir_name} in {charm_dir}"
-    assert len(charms) == 1, f"Multiple .charm files found for {charm_dir_name} in {charm_dir}"
-    return charms[0].absolute()
-
-
-RETRY_FOR_THREE_MINUTES = tenacity.Retrying(
-    wait=tenacity.wait_exponential(multiplier=1, min=1, max=15),
-    stop=tenacity.stop_after_delay(180),
-    reraise=True,
-)
+    # integrating the UI with the ingress:
+    juju.integrate(
+        f"{ISTIO_INGRESS_K8S_APP}:{ISTIO_INGRESS_ROUTE_ENDPOINT}",
+        f"{CHARM_NAME}:{ISTIO_INGRESS_ROUTE_ENDPOINT}",
+    )
+    logger.info("Waiting for the UI to be active after integrating it with the ingress...")
+    juju.wait(lambda status: status.apps[CHARM_NAME].is_active)
 
 
 async def test_feast_ui_ingress_accessible(juju: jubilant.Juju):
