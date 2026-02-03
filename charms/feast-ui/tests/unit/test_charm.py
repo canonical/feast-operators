@@ -1,11 +1,10 @@
-from contextlib import nullcontext
 from pathlib import Path
 from unittest.mock import patch
 
 import ops
 import pytest
 import yaml
-from charmed_kubeflow_chisme.exceptions import GenericCharmRuntimeError, ErrorWithStatus
+from charmed_kubeflow_chisme.exceptions import ErrorWithStatus
 from ops.model import ActiveStatus, BlockedStatus, WaitingStatus
 from ops.testing import Container, Context, State
 
@@ -262,10 +261,7 @@ def test_ambient_mode_ingress_configurations(
                 # ...backends:
                 assert len(first_and_only_httproute.backends) == 1
                 assert first_and_only_httproute.backends[0].service == METADATA["name"]
-                assert (
-                    first_and_only_httproute.backends[0].port
-                    == EXPECTED_K8S_SERVICE_HTTP_PORT
-                )
+                assert first_and_only_httproute.backends[0].port  == EXPECTED_K8S_SERVICE_HTTP_PORT
 
             else:
                 ingress_submit_config.assert_not_called()

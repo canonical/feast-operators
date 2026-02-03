@@ -65,8 +65,7 @@ class AmbientIngressRequirerComponent(Component):
             policies=None,
         )
         self._charm.ambient_mode_ingress = IstioIngressRouteRequirer(
-            self._charm,
-            relation_name=self.relation_name
+            self._charm, relation_name=self.relation_name
         )
         self._events_to_observe = [self._charm.ambient_mode_ingress.on.ready]
 
