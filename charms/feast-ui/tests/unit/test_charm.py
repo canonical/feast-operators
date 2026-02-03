@@ -10,9 +10,9 @@ from ops.testing import Container, Context, State
 
 from charm import FeastUICharm
 
-INGRESS_PATH_MATCHED_PREFIX = "/feast/"
-INGRESS_PATH_REWRITTEN_PREFIX = "/"
-K8S_SERVICE_HTTP_PORT = 8888
+EXPECTED_INGRESS_PATH_MATCHED_PREFIX = "/feast/"
+EXPECTED_INGRESS_PATH_REWRITTEN_PREFIX = "/"
+EXPECTED_K8S_SERVICE_HTTP_PORT = 8888
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 MOCKED_VALID_FEATURE_STORE_CONFIGURATIONS = """project: my_project
 registry: data/registry.db
@@ -235,19 +235,25 @@ def test_ambient_mode_ingress_configurations(mock_get_yaml, ctx, is_leader):
 
                 # ...matches:
                 assert len(first_and_only_httproute.matches) == 1
-                assert first_and_only_httproute.matches[0].path.value == INGRESS_PATH_MATCHED_PREFIX
+                assert (
+                    first_and_only_httproute.matches[0].path.value
+                    == EXPECTED_INGRESS_PATH_MATCHED_PREFIX
+                )
 
                 # ...filters:
                 assert len(first_and_only_httproute.filters) == 1
                 assert (
                     first_and_only_httproute.filters[0].urlRewrite.path.value
-                    == INGRESS_PATH_REWRITTEN_PREFIX
+                    == EXPECTED_INGRESS_PATH_REWRITTEN_PREFIX
                 )
 
                 # ...backends:
                 assert len(first_and_only_httproute.backends) == 1
                 assert first_and_only_httproute.backends[0].service == METADATA["name"]
-                assert first_and_only_httproute.backends[0].port == K8S_SERVICE_HTTP_PORT
+                assert (
+                    first_and_only_httproute.backends[0].port
+                    == EXPECTED_K8S_SERVICE_HTTP_PORT
+                )
 
             else:
                 ingress_submit_config.assert_not_called()
