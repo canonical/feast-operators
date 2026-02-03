@@ -55,7 +55,7 @@ class AmbientIngressRequirerComponent(Component):
             #   requirer side
             # - the UI of Feast is directly called from the UI of the Kubeflow Dashboard, from
             #   the client's browser and not via the Kubeflow Dashboard service, so no
-            #   AuthorizationPolicies from the Dashbaord are necessary
+            #   AuthorizationPolicies from the Dashboard are necessary
             # - Feast's integrator and Resource Dispatcher, while exchanging data via Juju
             #   integrations with the UI, do not expect direct API calls from the UI
             # - while the UI of Feast does make direct API calls to its offline store, online
