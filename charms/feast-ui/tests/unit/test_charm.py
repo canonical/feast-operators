@@ -206,10 +206,7 @@ def test_istio_relations_conflict_detector(
 )
 @pytest.mark.parametrize("is_leader", [(True, False)])
 def test_ambient_mode_ingress_configurations(
-    mock_get_yaml,
-    mocked_ingress_submit_config,
-    ctx,
-    is_leader
+    mock_get_yaml, mocked_ingress_submit_config, ctx, is_leader
 ):
     """Test that the ingress configurations are correctly submitted based on leadership."""
     # arrange:
