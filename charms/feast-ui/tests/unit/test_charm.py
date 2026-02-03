@@ -10,7 +10,18 @@ from ops.testing import Container, Context, State
 
 from charm import FeastUICharm
 
+INGRESS_PATH_MATCHED_PREFIX = "/feast/"
+INGRESS_PATH_REWRITTEN_PREFIX = "/"
+K8S_SERVICE_HTTP_PORT = 8888
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
+MOCKED_VALID_FEATURE_STORE_CONFIGURATIONS = """project: my_project
+registry: data/registry.db
+provider: local
+online_store:
+  type: sqlite
+  path: data/online_store.db
+entity_key_serialization_version: 2
+"""
 
 
 @pytest.fixture()
@@ -97,14 +108,7 @@ def test_empty_feature_store_yaml(mock_get_yaml, ctx):
 @patch(
     "components.store_configuration_reciver_component.StoreConfigurationReceiverComponent"
     ".get_feature_store_yaml",
-    return_value="""project: my_project
-registry: data/registry.db
-provider: local
-online_store:
-  type: sqlite
-  path: data/online_store.db
-entity_key_serialization_version: 2
-""",
+    return_value=MOCKED_VALID_FEATURE_STORE_CONFIGURATIONS,
 )
 def test_valid_feature_store_yaml(mock_get_yaml, ctx):
     """Test successful YAML config results in ActiveStatus."""
@@ -126,14 +130,7 @@ def test_valid_feature_store_yaml(mock_get_yaml, ctx):
 @patch(
     "components.store_configuration_reciver_component.StoreConfigurationReceiverComponent"
     ".get_feature_store_yaml",
-    return_value="""project: my_project
-registry: data/registry.db
-provider: local
-online_store:
-  type: sqlite
-  path: data/online_store.db
-entity_key_serialization_version: 2
-""",
+    return_value=MOCKED_VALID_FEATURE_STORE_CONFIGURATIONS,
 )
 @pytest.mark.parametrize(
     "add_ambient_mode_ingress,add_sidecar_mode_ingress",
@@ -195,3 +192,68 @@ def test_istio_relations_conflict_detector(
         ) in status.message
     else:
         assert isinstance(status, ActiveStatus)
+
+
+@patch(
+    "components.store_configuration_reciver_component.StoreConfigurationReceiverComponent"
+    ".get_feature_store_yaml",
+    return_value=MOCKED_VALID_FEATURE_STORE_CONFIGURATIONS,
+)
+@patch(
+    "components.istio_ambient_requirer_component.AmbientIngressRequirerComponent.ingress"
+    ".submit_config",
+    return_value=MOCKED_VALID_FEATURE_STORE_CONFIGURATIONS,
+)
+@pytest.mark.parametrize("is_leader", [(True, False)])
+def test_ambient_mode_ingress_configurations(
+    mock_get_yaml,
+    mocked_ingress_submit_config,
+    ctx,
+    is_leader
+):
+    """Test that the ingress configurations are correctly submitted based on leadership."""
+    # arrange:
+    state_in = State(
+        leader=is_leader,
+        relations=[
+            ops.testing.Relation(
+                endpoint="feast-configuration",
+                interface="feast_configuration",
+            )
+        ],
+        containers=[Container(name="feast-ui", can_connect=True)],
+    )
+
+    # act:
+    ctx.run(ctx.on.install(), state_in)
+
+    # assert:
+
+    if is_leader:
+        mocked_ingress_submit_config.assert_called_once()
+
+        # asserting one and only one HTTPRoute is defined:
+        submitted_ingress_configurations = mocked_ingress_submit_config.call_args.args[0]
+        assert len(submitted_ingress_configurations.http_routes) == 1
+        first_and_only_httproute = submitted_ingress_configurations.http_routes[0]
+
+        # asserting that the first and only HTTPRoute defined holds the expected...
+
+        # ...matches:
+        assert len(first_and_only_httproute.matches) == 1
+        assert first_and_only_httproute.matches[0].path.value == INGRESS_PATH_MATCHED_PREFIX
+
+        # ...filters:
+        assert len(first_and_only_httproute.filters) == 1
+        assert (
+            first_and_only_httproute.filters[0].urlRewrite.path.value
+            == INGRESS_PATH_REWRITTEN_PREFIX
+        )
+
+        # ...backends:
+        assert len(first_and_only_httproute.backends) == 1
+        assert first_and_only_httproute.backends[0].service.name == ctx.app_name
+        assert first_and_only_httproute.backends[0].service.port == K8S_SERVICE_HTTP_PORT
+
+    else:
+        mocked_ingress_submit_config.assert_not_called()
