@@ -89,7 +89,6 @@ requires:
           - port
           - prefix
     versions: [v1]
-    _supported_versions: [v1]
     __schema_source: https://raw.githubusercontent.com/canonical/operator-schemas/master/ingress.yaml
   istio-ingress-route:
     interface: istio_ingress_route
