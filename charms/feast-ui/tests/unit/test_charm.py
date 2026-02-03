@@ -207,6 +207,7 @@ def test_ambient_mode_ingress_configurations(
 ):
     """Test that the ingress configurations are correctly submitted based on leadership."""
     # arrange:
+
     state_in = State(
         leader=is_unit_leader,
         relations=[
@@ -229,9 +230,12 @@ def test_ambient_mode_ingress_configurations(
             if config_submission_broken:
                 mocked_ingress.submit_config.side_effect = Exception("Test case's exception!")
 
-            manager.run()
+            # act:
 
-            # assert (everything else):
+            state_out = manager.run()
+
+            # assert:
+
             ingress_submit_config = mocked_ingress.submit_config
 
             if is_unit_leader and is_ingress_ready:
@@ -262,6 +266,10 @@ def test_ambient_mode_ingress_configurations(
                 assert len(first_and_only_httproute.backends) == 1
                 assert first_and_only_httproute.backends[0].service == METADATA["name"]
                 assert first_and_only_httproute.backends[0].port == EXPECTED_K8S_SERVICE_HTTP_PORT
+
+                # asserting broken configuration submissions do not compromise the unit status:
+                if config_submission_broken:
+                    assert isinstance(state_out.unit_status, ActiveStatus)
 
             else:
                 ingress_submit_config.assert_not_called()
