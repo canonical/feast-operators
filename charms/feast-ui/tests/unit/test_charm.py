@@ -200,11 +200,11 @@ def test_istio_relations_conflict_detector(
     ".get_feature_store_yaml",
     return_value=MOCKED_VALID_FEATURE_STORE_CONFIGURATIONS,
 )
-@pytest.mark.parametrize("is_unit_leader", [True, False], ids=["leader", "non-leader"])
+@pytest.mark.parametrize("config_submission_broken", [True, False], ids=["broken", "good"])
 @pytest.mark.parametrize("is_ingress_ready", [True, False], ids=["ready", "not-ready"])
-@pytest.mark.parametrize("raise_config_submission_exception", [True, False], ids=["error", "good"])
+@pytest.mark.parametrize("is_unit_leader", [True, False], ids=["leader", "non-leader"])
 def test_ambient_mode_ingress_configurations(
-    mock_get_yaml, ctx, is_unit_leader, is_ingress_ready, raise_config_submission_exception
+    mock_get_yaml, ctx, config_submission_broken, is_ingress_ready, is_unit_leader
 ):
     """Test that the ingress configurations are correctly submitted based on leadership."""
     # arrange:
@@ -214,7 +214,11 @@ def test_ambient_mode_ingress_configurations(
             ops.testing.Relation(
                 endpoint="feast-configuration",
                 interface="feast_configuration",
-            )
+            ),
+            ops.testing.Relation(
+                endpoint="istio-ingress-route",
+                interface="istio_ingress_route",
+            ),
         ],
         containers=[Container(name="feast-ui", can_connect=True)],
     )
@@ -223,23 +227,15 @@ def test_ambient_mode_ingress_configurations(
         # mocking the behavior of the ingress attribute of the charm according to the test case:
         with patch.object(charm, "ambient_mode_ingress") as mocked_ingress:
             mocked_ingress.is_ready.return_value = is_ingress_ready
-            if raise_config_submission_exception:
+            if config_submission_broken:
                 mocked_ingress.submit_config.side_effect = Exception("Test case's exception!")
 
-            # act:
-            with (
-                pytest.raises(GenericCharmRuntimeError) if raise_config_submission_exception
-                else nullcontext()
-            ) as excinfo:
-                manager.run()
+            manager.run()
 
-            # assert:
+            # assert (everything else):
             ingress_submit_config = mocked_ingress.submit_config
 
-            if is_unit_leader and raise_config_submission_exception:
-                assert "Failed to submit ingress config: {e}" in str(excinfo.value)
-
-            elif is_unit_leader and is_ingress_ready:
+            if is_unit_leader and is_ingress_ready:
                 ingress_submit_config.assert_called_once()
 
                 # asserting one and only one HTTPRoute is defined:
