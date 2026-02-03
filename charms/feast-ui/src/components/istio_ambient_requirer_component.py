@@ -49,7 +49,20 @@ class AmbientIngressRequirerComponent(Component):
 
         self._mesh = ServiceMeshConsumer(
             self._charm,
-            policies=None,  # NOTE: no AuthorizationPolicies necessary because... why? TODO
+            # NOTE: no (additional) AuthorizationPolicies are necessary because:
+            # - the one required for traffic from the ingress route is already created by the
+            #   ingress-route provider itself and we therefore don't need to create it on the
+            #   requirer side
+            # - the UI of Feast is directly called from the UI of the Kubeflow Dashboard, from
+            #   the client's browser and not via the Kubeflow Dashboard service, so no
+            #   AuthorizationPolicies from the Dashbaord are necessary
+            # - Feast's integrator and Resource Dispatcher, while exchanging data via Juju
+            #   integrations with the UI, do not expect direct API calls from the UI
+            # - while the UI of Feast does make direct API calls to its offline store, online
+            #   store and registry, such workloads are not part of the mesh (yet) on their end and,
+            #   given there is no general AuthorizationPolicies in place (yet) that implements a
+            #   deny-by-default behavior, the receiving ends of such API calls do allow traffic
+            policies=None,
         )
         self.ingress = IstioIngressRouteRequirer(self._charm, relation_name=self.relation_name)
         self._events_to_observe = [self.ingress.on.ready]

@@ -158,7 +158,7 @@ def test_istio_relations_conflict_detector(
     relations = [
         ops.testing.Relation(
             endpoint="feast-configuration",
-            interface="feast_configuration",
+            interface="feast_configuration",  # FIXME: why not underscores?
         )
     ]
     if add_ambient_mode_ingress:
@@ -170,7 +170,7 @@ def test_istio_relations_conflict_detector(
         )
     if add_sidecar_mode_ingress:
         relations.append(
-            ops.testing.Relation(
+            ops.testing.Relation(  # FIXME
                 endpoint=ingress_endpoint_name_for_sidecar_mode,
                 interface="ingress",
             )
