@@ -64,8 +64,17 @@ class AmbientIngressRequirerComponent(Component):
             #   deny-by-default behavior, the receiving ends of such API calls do allow traffic
             policies=None,
         )
-        self.ingress = IstioIngressRouteRequirer(self._charm, relation_name=self.relation_name)
+        self.ingress = self.get_istio_ingress_requirer
         self._events_to_observe = [self.ingress.on.ready]
+
+    def _configure_app_leader(self, _):
+        if self.ingress.is_ready():
+            try:
+                self.ingress.submit_config(self._get_ingress_config())
+            except Exception as e:
+                raise GenericCharmRuntimeError(f"Failed to submit ingress config: {e}")
+        else:
+            logger.debug("Ambient ingress relation not ready, skipping config submission.")
 
     def _get_ingress_config(self):
         http_listener = Listener(
@@ -99,14 +108,9 @@ class AmbientIngressRequirerComponent(Component):
             ],
         )
 
-    def _configure_app_leader(self, _):
-        if self.ingress.is_ready():
-            try:
-                self.ingress.submit_config(self._get_ingress_config())
-            except Exception as e:
-                raise GenericCharmRuntimeError(f"Failed to submit ingress config: {e}")
-        else:
-            logger.debug("Ambient ingress relation not ready, skipping config submission.")
+    @property
+    def get_istio_ingress_requirer(self):  # NOTE: defined as a property to ease unit-test mocking
+        return IstioIngressRouteRequirer(self._charm, relation_name=self.relation_name)
 
     def get_status(self):  # noqa: D102
         # This component depends on LeadershipGateComponent so no need to check for leadership here
