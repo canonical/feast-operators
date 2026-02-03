@@ -13,6 +13,12 @@ from charm import FeastUICharm
 EXPECTED_INGRESS_PATH_MATCHED_PREFIX = "/feast/"
 EXPECTED_INGRESS_PATH_REWRITTEN_PREFIX = "/"
 EXPECTED_K8S_SERVICE_HTTP_PORT = 8888
+RELATION_ENDPOINT_FOR_FEAST_CONFIGURATIONS = "feast-configuration"
+RELATION_ENDPOINT_FOR_INGRESS_IN_AMBIENT_MODE = "istio-ingress-route"
+RELATION_ENDPOINT_FOR_INGRESS_IN_SIDECAR_MODE = "ingress"
+RELATION_INTERFACE_FOR_FEAST_CONFIGURATIONS = "feast_configuration"
+RELATION_INTERFACE_FOR_INGRESS_IN_AMBIENT_MODE = "istio_ingress_route"
+RELATION_INTERFACE_FOR_INGRESS_IN_SIDECAR_MODE = "ingress"
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 MOCKED_VALID_FEATURE_STORE_CONFIGURATIONS = """project: my_project
 registry: data/registry.db
@@ -51,8 +57,8 @@ def test_relation_exists_but_empty(ctx):
         leader=True,
         relations=[
             ops.testing.Relation(
-                endpoint="feast-configuration",
-                interface="feast_configuration",
+                endpoint=RELATION_ENDPOINT_FOR_FEAST_CONFIGURATIONS,
+                interface=RELATION_INTERFACE_FOR_FEAST_CONFIGURATIONS,
             )
         ],
     )
@@ -71,8 +77,8 @@ def test_invalid_feature_store_data(mock_get_yaml, ctx):
         leader=True,
         relations=[
             ops.testing.Relation(
-                endpoint="feast-configuration",
-                interface="feast_configuration",
+                endpoint=RELATION_ENDPOINT_FOR_FEAST_CONFIGURATIONS,
+                interface=RELATION_INTERFACE_FOR_FEAST_CONFIGURATIONS,
             )
         ],
     )
@@ -93,8 +99,8 @@ def test_empty_feature_store_yaml(mock_get_yaml, ctx):
         leader=True,
         relations=[
             ops.testing.Relation(
-                endpoint="feast-configuration",
-                interface="feast_configuration",
+                endpoint=RELATION_ENDPOINT_FOR_FEAST_CONFIGURATIONS,
+                interface=RELATION_INTERFACE_FOR_FEAST_CONFIGURATIONS,
             )
         ],
         containers=[Container(name="feast-ui", can_connect=True)],
@@ -116,8 +122,8 @@ def test_valid_feature_store_yaml(mock_get_yaml, ctx):
         leader=True,
         relations=[
             ops.testing.Relation(
-                endpoint="feast-configuration",
-                interface="feast_configuration",
+                endpoint=RELATION_ENDPOINT_FOR_FEAST_CONFIGURATIONS,
+                interface=RELATION_INTERFACE_FOR_FEAST_CONFIGURATIONS,
             )
         ],
         containers=[Container(name="feast-ui", can_connect=True)],
@@ -132,44 +138,31 @@ def test_valid_feature_store_yaml(mock_get_yaml, ctx):
     ".get_feature_store_yaml",
     return_value=MOCKED_VALID_FEATURE_STORE_CONFIGURATIONS,
 )
-@pytest.mark.parametrize(
-    "add_ambient_mode_ingress,add_sidecar_mode_ingress",
-    [
-        (False, False),  # no mesh
-        (True, False),  # only ambient mode
-        (False, True),  # only sidecar mode
-        (True, True),  # both modes on (not allowed)
-    ],
-)
+@pytest.mark.parametrize("add_ambient_mode_ingress", [True, False], ids=["ambient", "no-ambient"])
+@pytest.mark.parametrize("add_sidecar_mode_ingress", [True, False], ids=["sidecar", "no-sidecar"])
 def test_istio_relations_conflict_detector(
-    mock_get_yaml,
-    ctx,
-    add_ambient_mode_ingress,
-    add_sidecar_mode_ingress,
+    mock_get_yaml, ctx, add_ambient_mode_ingress, add_sidecar_mode_ingress,
 ):
     """Test the status of the conflict detector based on enabled ingress relations."""
-    ingress_endpoint_name_for_ambient_mode = "istio-ingress-route"
-    ingress_endpoint_name_for_sidecar_mode = "ingress"
-
     # arrange:
     relations = [
         ops.testing.Relation(
-            endpoint="feast-configuration",
-            interface="feast_configuration",
+            endpoint=RELATION_ENDPOINT_FOR_FEAST_CONFIGURATIONS,
+            interface=RELATION_INTERFACE_FOR_FEAST_CONFIGURATIONS,
         )
     ]
     if add_ambient_mode_ingress:
         relations.append(
             ops.testing.Relation(
-                endpoint=ingress_endpoint_name_for_ambient_mode,
-                interface="istio_ingress_route",
+                endpoint=RELATION_ENDPOINT_FOR_INGRESS_IN_AMBIENT_MODE,
+                interface=RELATION_INTERFACE_FOR_INGRESS_IN_AMBIENT_MODE,
             )
         )
     if add_sidecar_mode_ingress:
         relations.append(
             ops.testing.Relation(
-                endpoint=ingress_endpoint_name_for_sidecar_mode,
-                interface="ingress",
+                endpoint=RELATION_ENDPOINT_FOR_INGRESS_IN_SIDECAR_MODE,
+                interface=RELATION_INTERFACE_FOR_INGRESS_IN_SIDECAR_MODE,
                 remote_app_data={"_supported_versions": "- v1"},
             )
         )
@@ -187,8 +180,8 @@ def test_istio_relations_conflict_detector(
     if add_ambient_mode_ingress and add_sidecar_mode_ingress:
         assert isinstance(status, BlockedStatus)
         assert (
-            f"Cannot have both '{ingress_endpoint_name_for_ambient_mode}' and "
-            f"'{ingress_endpoint_name_for_sidecar_mode}' relations at the same time."
+            f"Cannot have both '{RELATION_ENDPOINT_FOR_INGRESS_IN_AMBIENT_MODE}' and "
+            f"'{RELATION_ENDPOINT_FOR_INGRESS_IN_SIDECAR_MODE}' relations at the same time."
         ) in status.message
     else:
         assert isinstance(status, ActiveStatus)
@@ -212,12 +205,12 @@ def test_ambient_mode_ingress_configurations(
         leader=is_unit_leader,
         relations=[
             ops.testing.Relation(
-                endpoint="feast-configuration",
-                interface="feast_configuration",
+                endpoint=RELATION_ENDPOINT_FOR_FEAST_CONFIGURATIONS,
+                interface=RELATION_INTERFACE_FOR_FEAST_CONFIGURATIONS,
             ),
             ops.testing.Relation(
-                endpoint="istio-ingress-route",
-                interface="istio_ingress_route",
+                endpoint=RELATION_ENDPOINT_FOR_INGRESS_IN_AMBIENT_MODE,
+                interface=RELATION_INTERFACE_FOR_INGRESS_IN_AMBIENT_MODE,
             ),
         ],
         containers=[Container(name="feast-ui", can_connect=True)],
