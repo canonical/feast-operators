@@ -166,7 +166,7 @@ def test_istio_relations_conflict_detector(
             ops.testing.Relation(
                 endpoint=ingress_endpoint_name_for_ambient_mode,
                 interface="istio_ingress_route",
-                remote_units_data={"_supported_versions": "- v1"},
+                remote_units_data={0: {"_supported_versions": "- v1"}},
             )
         )
     if add_sidecar_mode_ingress:
