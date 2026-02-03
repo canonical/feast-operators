@@ -141,7 +141,10 @@ def test_valid_feature_store_yaml(mock_get_yaml, ctx):
 @pytest.mark.parametrize("add_ambient_mode_ingress", [True, False], ids=["ambient", "no-ambient"])
 @pytest.mark.parametrize("add_sidecar_mode_ingress", [True, False], ids=["sidecar", "no-sidecar"])
 def test_istio_relations_conflict_detector(
-    mock_get_yaml, ctx, add_ambient_mode_ingress, add_sidecar_mode_ingress,
+    mock_get_yaml,
+    ctx,
+    add_ambient_mode_ingress,
+    add_sidecar_mode_ingress,
 ):
     """Test the status of the conflict detector based on enabled ingress relations."""
     # arrange:
@@ -196,11 +199,7 @@ def test_istio_relations_conflict_detector(
 @pytest.mark.parametrize("is_ingress_ready", [True, False], ids=["ready", "not-ready"])
 @pytest.mark.parametrize("is_unit_leader", [True, False], ids=["leader", "non-leader"])
 def test_ambient_mode_ingress_configurations(
-    mock_get_yaml,
-    ctx,
-    config_submission_broken,
-    is_ingress_ready,
-    is_unit_leader
+    mock_get_yaml, ctx, config_submission_broken, is_ingress_ready, is_unit_leader
 ):
     """Test that the ingress configurations are correctly submitted based on leadership."""
     # arrange:
