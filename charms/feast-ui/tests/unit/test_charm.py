@@ -122,6 +122,7 @@ def test_valid_feature_store_yaml(mock_get_yaml, ctx):
 
     assert state_out.unit_status == ActiveStatus()
 
+
 @pytest.mark.parametrize(
     "add_ambient_mode_ingress,add_sidecar_mode_ingress",
     [
@@ -165,11 +166,9 @@ def test_istio_relations_conflict_detector(
     status = state_out.unit_status
     if add_ambient_mode_ingress and add_sidecar_mode_ingress:
         assert isinstance(status, BlockedStatus)
-        assert (
-            status.message == (
-                f"Cannot have both {ingress_endpoint_name_for_ambient_mode} and "
-                f"{ingress_endpoint_name_for_sidecar_mode} relations at the same time."
-            )
+        assert status.message == (
+            f"Cannot have both {ingress_endpoint_name_for_ambient_mode} and "
+            f"{ingress_endpoint_name_for_sidecar_mode} relations at the same time."
         )
     else:
         assert isinstance(status, ActiveStatus)

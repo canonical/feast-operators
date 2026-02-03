@@ -93,7 +93,7 @@ class FeastUICharm(CharmBase):
         self.ambient_mode_ingress_relation = self.charm_reconciler.add(
             component=AmbientIngressRequirerComponent(
                 charm=self,
-                name=f"ambient_mode_relation:{INGRESS_MODES_TO_RELATION_NAMES["ambient"]}",
+                name=f"ambient_mode_relation:{INGRESS_MODES_TO_RELATION_NAMES['ambient']}",
                 path_matched_prefix=INGRESS_PATH_MATCHED_PREFIX,
                 path_rewritten_prefix=INGRESS_PATH_REWRITTEN_PREFIX,
                 relation_name=INGRESS_MODES_TO_RELATION_NAMES["ambient"],
@@ -106,7 +106,7 @@ class FeastUICharm(CharmBase):
         self.sidecar_mode_ingress_relation = self.charm_reconciler.add(
             SdiRelationBroadcasterComponent(
                 charm=self,
-                name=f"sidecar_mode_relation:{INGRESS_MODES_TO_RELATION_NAMES["sidecar"]}",
+                name=f"sidecar_mode_relation:{INGRESS_MODES_TO_RELATION_NAMES['sidecar']}",
                 relation_name=INGRESS_MODES_TO_RELATION_NAMES["sidecar"],
                 data_to_send={
                     "prefix": INGRESS_PATH_MATCHED_PREFIX,
