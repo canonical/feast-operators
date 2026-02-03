@@ -123,6 +123,18 @@ def test_valid_feature_store_yaml(mock_get_yaml, ctx):
     assert state_out.unit_status == ActiveStatus()
 
 
+@patch(
+    "components.store_configuration_reciver_component.StoreConfigurationReceiverComponent"
+    ".get_feature_store_yaml",
+    return_value="""project: my_project
+registry: data/registry.db
+provider: local
+online_store:
+  type: sqlite
+  path: data/online_store.db
+entity_key_serialization_version: 2
+""",
+)
 @pytest.mark.parametrize(
     "add_ambient_mode_ingress,add_sidecar_mode_ingress",
     [
@@ -133,6 +145,7 @@ def test_valid_feature_store_yaml(mock_get_yaml, ctx):
     ],
 )
 def test_istio_relations_conflict_detector(
+    mock_get_yaml,
     ctx,
     add_ambient_mode_ingress,
     add_sidecar_mode_ingress,
@@ -142,7 +155,12 @@ def test_istio_relations_conflict_detector(
     ingress_endpoint_name_for_sidecar_mode = "ingress"
 
     # arrange:
-    relations = []
+    relations = [
+        ops.testing.Relation(
+            endpoint="feast-configuration",
+            interface="feast_configuration",
+        )
+    ]
     if add_ambient_mode_ingress:
         relations.append(
             ops.testing.Relation(
@@ -157,7 +175,11 @@ def test_istio_relations_conflict_detector(
                 interface="ingress",
             )
         )
-    state_in = State(leader=True, relations=relations)
+    state_in = State(
+        leader=True,
+        relations=relations,
+        containers=[Container(name="feast-ui", can_connect=True)],
+    )
 
     # act:
     state_out = ctx.run(ctx.on.install(), state_in)
