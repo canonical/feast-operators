@@ -170,7 +170,7 @@ def test_istio_relations_conflict_detector(
         )
     if add_sidecar_mode_ingress:
         relations.append(
-            ops.testing.Relation(  # FIXME
+            ops.testing.Relation(
                 endpoint=ingress_endpoint_name_for_sidecar_mode,
                 interface="ingress",
             )
