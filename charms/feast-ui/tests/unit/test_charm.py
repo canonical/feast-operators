@@ -1,10 +1,11 @@
+from contextlib import nullcontext
 from pathlib import Path
 from unittest.mock import patch
 
 import ops
 import pytest
 import yaml
-from charmed_kubeflow_chisme.exceptions import ErrorWithStatus
+from charmed_kubeflow_chisme.exceptions import GenericCharmRuntimeError, ErrorWithStatus
 from ops.model import ActiveStatus, BlockedStatus, WaitingStatus
 from ops.testing import Container, Context, State
 
@@ -199,12 +200,16 @@ def test_istio_relations_conflict_detector(
     ".get_feature_store_yaml",
     return_value=MOCKED_VALID_FEATURE_STORE_CONFIGURATIONS,
 )
-@pytest.mark.parametrize("is_leader", [True, False])
-def test_ambient_mode_ingress_configurations(mock_get_yaml, ctx, is_leader):
+@pytest.mark.parametrize("is_unit_leader", [True, False], ids=["leader", "non-leader"])
+@pytest.mark.parametrize("is_ingress_ready", [True, False], ids=["ready", "not-ready"])
+@pytest.mark.parametrize("raise_config_submission_exception", [True, False], ids=["error", "good"])
+def test_ambient_mode_ingress_configurations(
+    mock_get_yaml, ctx, is_unit_leader, is_ingress_ready, raise_config_submission_exception
+):
     """Test that the ingress configurations are correctly submitted based on leadership."""
     # arrange:
     state_in = State(
-        leader=is_leader,
+        leader=is_unit_leader,
         relations=[
             ops.testing.Relation(
                 endpoint="feast-configuration",
@@ -213,17 +218,28 @@ def test_ambient_mode_ingress_configurations(mock_get_yaml, ctx, is_leader):
         ],
         containers=[Container(name="feast-ui", can_connect=True)],
     )
-    with ctx(ctx.on.install(), state_in) as manager:
+    with ctx(ctx.on.install(), state_in) as manager:  # to access the charm, necessary for mocking
         charm = manager.charm
+        # mocking the behavior of the ingress attribute of the charm according to the test case:
         with patch.object(charm, "ambient_mode_ingress") as mocked_ingress:
-            mocked_ingress.is_ready.return_value = True
+            mocked_ingress.is_ready.return_value = is_ingress_ready
+            if raise_config_submission_exception:
+                mocked_ingress.submit_config.side_effect = Exception("Test case's exception!")
 
             # act:
-            manager.run()
+            with (
+                pytest.raises(GenericCharmRuntimeError) if raise_config_submission_exception
+                else nullcontext()
+            ) as excinfo:
+                manager.run()
 
             # assert:
             ingress_submit_config = mocked_ingress.submit_config
-            if is_leader:
+
+            if is_unit_leader and raise_config_submission_exception:
+                assert "Failed to submit ingress config: {e}" in str(excinfo.value)
+
+            elif is_unit_leader and is_ingress_ready:
                 ingress_submit_config.assert_called_once()
 
                 # asserting one and only one HTTPRoute is defined:
