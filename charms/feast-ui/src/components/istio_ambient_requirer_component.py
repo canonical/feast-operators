@@ -64,13 +64,16 @@ class AmbientIngressRequirerComponent(Component):
             #   deny-by-default behavior, the receiving ends of such API calls do allow traffic
             policies=None,
         )
-        self.ingress = self.get_istio_ingress_requirer
-        self._events_to_observe = [self.ingress.on.ready]
+        self._charm.ambient_mode_ingress = IstioIngressRouteRequirer(
+            self._charm,
+            relation_name=self.relation_name
+        )
+        self._events_to_observe = [self._charm.ambient_mode_ingress.on.ready]
 
     def _configure_app_leader(self, _):
-        if self.ingress.is_ready():
+        if self._charm.ambient_mode_ingress.is_ready():
             try:
-                self.ingress.submit_config(self._get_ingress_config())
+                self._charm.ambient_mode_ingress.submit_config(self._get_ingress_config())
             except Exception as e:
                 raise GenericCharmRuntimeError(f"Failed to submit ingress config: {e}")
         else:
@@ -92,13 +95,13 @@ class AmbientIngressRequirerComponent(Component):
                 HTTPRoute(
                     name="http-route",
                     listener=http_listener,
-                    matches=[HTTPRouteMatch(path=HTTPPathMatch(value=self.path_prefix))],
+                    matches=[HTTPRouteMatch(path=HTTPPathMatch(value=self.path_matched_prefix))],
                     filters=[
                         URLRewriteFilter(
                             urlRewrite=URLRewriteSpec(
                                 path=PathModifier(
                                     type=PathModifierType.ReplacePrefixMatch,
-                                    value=self.url_rewrite,
+                                    value=self.path_rewritten_prefix,
                                 )
                             )
                         )
@@ -107,10 +110,6 @@ class AmbientIngressRequirerComponent(Component):
                 ),
             ],
         )
-
-    @property
-    def get_istio_ingress_requirer(self):  # NOTE: defined as a property to ease unit-test mocking
-        return IstioIngressRouteRequirer(self._charm, relation_name=self.relation_name)
 
     def get_status(self):  # noqa: D102
         # This component depends on LeadershipGateComponent so no need to check for leadership here

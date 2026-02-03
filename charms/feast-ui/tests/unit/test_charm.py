@@ -199,15 +199,8 @@ def test_istio_relations_conflict_detector(
     ".get_feature_store_yaml",
     return_value=MOCKED_VALID_FEATURE_STORE_CONFIGURATIONS,
 )
-@patch(
-    "components.istio_ambient_requirer_component.AmbientIngressRequirerComponent.ingress"
-    ".submit_config",
-    return_value=MOCKED_VALID_FEATURE_STORE_CONFIGURATIONS,
-)
-@pytest.mark.parametrize("is_leader", [(True, False)])
-def test_ambient_mode_ingress_configurations(
-    mock_get_yaml, mocked_ingress_submit_config, ctx, is_leader
-):
+@pytest.mark.parametrize("is_leader", [True, False])
+def test_ambient_mode_ingress_configurations(mock_get_yaml, ctx, is_leader):
     """Test that the ingress configurations are correctly submitted based on leadership."""
     # arrange:
     state_in = State(
@@ -220,37 +213,40 @@ def test_ambient_mode_ingress_configurations(
         ],
         containers=[Container(name="feast-ui", can_connect=True)],
     )
+    with ctx(ctx.on.install(), state_in) as manager:
+        with patch.object(manager.charm, "ambient_mode_ingress") as mocked_ingress:
+            mocked_ingress.is_ready.return_value = True
 
-    # act:
-    ctx.run(ctx.on.install(), state_in)
+            # act:
+            manager.run()
 
-    # assert:
+            # assert:
+            ingress_submit_config = mocked_ingress.submit_config
+            if is_leader:
+                ingress_submit_config.assert_called_once()
 
-    if is_leader:
-        mocked_ingress_submit_config.assert_called_once()
+                # asserting one and only one HTTPRoute is defined:
+                submitted_ingress_configurations = ingress_submit_config.call_args.args[0]
+                assert len(submitted_ingress_configurations.http_routes) == 1
+                first_and_only_httproute = submitted_ingress_configurations.http_routes[0]
 
-        # asserting one and only one HTTPRoute is defined:
-        submitted_ingress_configurations = mocked_ingress_submit_config.call_args.args[0]
-        assert len(submitted_ingress_configurations.http_routes) == 1
-        first_and_only_httproute = submitted_ingress_configurations.http_routes[0]
+                # asserting that the first and only HTTPRoute defined holds the expected...
 
-        # asserting that the first and only HTTPRoute defined holds the expected...
+                # ...matches:
+                assert len(first_and_only_httproute.matches) == 1
+                assert first_and_only_httproute.matches[0].path.value == INGRESS_PATH_MATCHED_PREFIX
 
-        # ...matches:
-        assert len(first_and_only_httproute.matches) == 1
-        assert first_and_only_httproute.matches[0].path.value == INGRESS_PATH_MATCHED_PREFIX
+                # ...filters:
+                assert len(first_and_only_httproute.filters) == 1
+                assert (
+                    first_and_only_httproute.filters[0].urlRewrite.path.value
+                    == INGRESS_PATH_REWRITTEN_PREFIX
+                )
 
-        # ...filters:
-        assert len(first_and_only_httproute.filters) == 1
-        assert (
-            first_and_only_httproute.filters[0].urlRewrite.path.value
-            == INGRESS_PATH_REWRITTEN_PREFIX
-        )
+                # ...backends:
+                assert len(first_and_only_httproute.backends) == 1
+                assert first_and_only_httproute.backends[0].service == ctx.app_name
+                assert first_and_only_httproute.backends[0].port == K8S_SERVICE_HTTP_PORT
 
-        # ...backends:
-        assert len(first_and_only_httproute.backends) == 1
-        assert first_and_only_httproute.backends[0].service.name == ctx.app_name
-        assert first_and_only_httproute.backends[0].service.port == K8S_SERVICE_HTTP_PORT
-
-    else:
-        mocked_ingress_submit_config.assert_not_called()
+            else:
+                ingress_submit_config.assert_not_called()
