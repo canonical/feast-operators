@@ -4,7 +4,6 @@ from pathlib import Path
 import jubilant
 import lightkube
 import pytest
-import requests
 import tenacity
 import yaml
 from charmed_kubeflow_chisme.testing import (
@@ -22,10 +21,7 @@ from charms_dependencies import (
     ONLINE_STORE,
     REGISTRY,
     RESOURCE_DISPATCHER,
-    deploy_and_integrate_service_mesh_charms,
-    integrate_with_service_mesh,
 )
-from lightkube.resources.core_v1 import Service
 
 logger = logging.getLogger(__name__)
 
@@ -147,7 +143,6 @@ def test_deploy_charm(juju: jubilant.Juju, request: pytest.FixtureRequest):
 
 def test_ingress_setup(juju: jubilant.Juju):
     """Deploy Istio in ambient mode and integrate it with all charms and with the UI's ingress."""
-
     # integrating all charms with the service mesh:
     for charm in (
         ADMISSION_WEBHOOK,
