@@ -102,7 +102,7 @@ class AmbientIngressRequirerComponent(Component):
     def _configure_app_leader(self, _):
         if self.ingress.is_ready():
             try:
-                self.ingress.submit_config(self.self._get_ingress_config())
+                self.ingress.submit_config(self._get_ingress_config())
             except Exception as e:
                 raise GenericCharmRuntimeError(f"Failed to submit ingress config: {e}")
         else:
