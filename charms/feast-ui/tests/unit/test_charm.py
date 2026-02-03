@@ -214,7 +214,8 @@ def test_ambient_mode_ingress_configurations(mock_get_yaml, ctx, is_leader):
         containers=[Container(name="feast-ui", can_connect=True)],
     )
     with ctx(ctx.on.install(), state_in) as manager:
-        with patch.object(manager.charm, "ambient_mode_ingress") as mocked_ingress:
+        charm = manager.charm
+        with patch.object(charm, "ambient_mode_ingress") as mocked_ingress:
             mocked_ingress.is_ready.return_value = True
 
             # act:
@@ -245,7 +246,7 @@ def test_ambient_mode_ingress_configurations(mock_get_yaml, ctx, is_leader):
 
                 # ...backends:
                 assert len(first_and_only_httproute.backends) == 1
-                assert first_and_only_httproute.backends[0].service == ctx.app_name
+                assert first_and_only_httproute.backends[0].service == METADATA["name"]
                 assert first_and_only_httproute.backends[0].port == K8S_SERVICE_HTTP_PORT
 
             else:
