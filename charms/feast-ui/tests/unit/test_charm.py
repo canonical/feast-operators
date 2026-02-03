@@ -162,7 +162,7 @@ def test_istio_relations_conflict_detector(
     state_out = ctx.run(ctx.on.install(), state_in)
 
     # assert:
-    status = state_out.app_status
+    status = state_out.unit_status
     if add_ambient_mode_ingress and add_sidecar_mode_ingress:
         assert isinstance(status, BlockedStatus)
         assert (
