@@ -261,7 +261,7 @@ def test_ambient_mode_ingress_configurations(
                 # ...backends:
                 assert len(first_and_only_httproute.backends) == 1
                 assert first_and_only_httproute.backends[0].service == METADATA["name"]
-                assert first_and_only_httproute.backends[0].port  == EXPECTED_K8S_SERVICE_HTTP_PORT
+                assert first_and_only_httproute.backends[0].port == EXPECTED_K8S_SERVICE_HTTP_PORT
 
             else:
                 ingress_submit_config.assert_not_called()
