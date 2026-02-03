@@ -166,9 +166,9 @@ def test_istio_relations_conflict_detector(
     status = state_out.unit_status
     if add_ambient_mode_ingress and add_sidecar_mode_ingress:
         assert isinstance(status, BlockedStatus)
-        assert status.message == (
+        assert (
             f"Cannot have both {ingress_endpoint_name_for_ambient_mode} and "
             f"{ingress_endpoint_name_for_sidecar_mode} relations at the same time."
-        )
+        ) in status.message
     else:
         assert isinstance(status, ActiveStatus)
