@@ -158,7 +158,7 @@ def test_istio_relations_conflict_detector(
     relations = [
         ops.testing.Relation(
             endpoint="feast-configuration",
-            interface="feast_configuration",  # FIXME: why not underscores?
+            interface="feast_configuration",
         )
     ]
     if add_ambient_mode_ingress:
