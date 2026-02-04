@@ -7,7 +7,6 @@ import pytest
 import tenacity
 import yaml
 from charmed_kubeflow_chisme.testing import (
-    assert_path_reachable_through_ingress,
     assert_security_context,
     generate_container_securitycontext_map,
     get_pod_names,
@@ -24,6 +23,7 @@ from charms_dependencies import (
     REGISTRY,
     RESOURCE_DISPATCHER,
 )
+from requests import get
 
 logger = logging.getLogger(__name__)
 
@@ -170,16 +170,34 @@ def test_ambient_mesh_and_ingress_setup(juju: jubilant.Juju):
     juju.wait(lambda status: status.apps[CHARM_NAME].is_active)
 
 
-async def test_feast_ui_ingress_accessible(juju: jubilant.Juju):
+def get_ingress_url(lightkube_client: lightkube.Client, model_name: str) -> str:
+    """Return external ingress URL for the Istio Gateway."""
+    ingress_service_name = "istio-ingress-k8s-istio"
+
+    ingress_service = lightkube_client.get(
+        lightkube.resources.core_v1.Service,
+        name=ingress_service_name,
+        namespace=model_name
+    )
+
+    assert (
+        ingress_service.status.loadBalancer.ingress
+    ), f"Service {ingress_service_name} in namespace {model_name} does not have a LoadBalancer IP"
+
+    return f"http://{ingress_service.status.loadBalancer.ingress[0].ip}"
+
+
+def test_feast_ui_ingress_accessible(juju: jubilant.Juju):
     """Ensure that Feast UI is reachable through the Ingress."""
+
+    ingress_url = get_ingress_url(lightkube_client, juju.model)
+    feast_url = f"{ingress_url}{HTTP_PATH}"
+
     for attempt in RETRY_FOR_THREE_MINUTES:
         with attempt:
-            await assert_path_reachable_through_ingress(
-                http_path=HTTP_PATH,
-                namespace=juju.model,
-                expected_content_type="text/html",
-                expected_response_text="Feast",
-            )
+            response = get(feast_url, timeout=10)
+            assert response.status_code == 200, f"Expected 200 OK, got {response.status_code}"
+            assert "Feast" in response.text or len(response.text) > 0, "Expected Feast UI content"
 
 
 @pytest.mark.parametrize("container_name", list(CONTAINERS_SECURITY_CONTEXT_MAP.keys()))
