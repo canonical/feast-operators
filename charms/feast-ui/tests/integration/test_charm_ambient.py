@@ -33,6 +33,7 @@ FEAST_DBS_NAMES = ["offline-store", "online-store", "registry"]
 HTTP_PATH = "/feast/"
 ISTIO_BEACON_K8S_APP = "istio-beacon-k8s"
 ISTIO_INGRESS_K8S_APP = "istio-ingress-k8s"
+ISTIO_K8S_APP = "istio-k8s"
 ISTIO_INGRESS_ROUTE_ENDPOINT = "istio-ingress-route"
 RETRY_FOR_THREE_MINUTES = tenacity.Retrying(
     wait=tenacity.wait_exponential(multiplier=1, min=1, max=15),
@@ -141,8 +142,17 @@ def test_deploy_charm(juju: jubilant.Juju, request: pytest.FixtureRequest):
     juju.wait(jubilant.all_active, successes=1)
 
 
-def test_ingress_setup(juju: jubilant.Juju):
-    """Deploy Istio in ambient mode and integrate it with all charms and with the UI's ingress."""
+def test_ambient_mesh_and_ingress_setup(juju: jubilant.Juju):
+    """Deploy Istio in ambient mode and integrate it with all charms and for the UI's ingress."""
+    # integrating charms that provide the ambient-mode service mesh and the ingress:
+    for charm in (ISTIO_K8S_APP, ISTIO_BEACON_K8S_APP, ISTIO_INGRESS_K8S_APP):
+        juju.deploy(
+            charm=ISTIO_K8S_APP,
+            channel="2/edge",
+            config={"platform": ""} if charm == ISTIO_K8S_APP else None,
+            trust=True,
+        )
+
     # integrating all charms with the service mesh:
     for charm in (
         ADMISSION_WEBHOOK,
