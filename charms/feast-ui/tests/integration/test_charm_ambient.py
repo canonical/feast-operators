@@ -7,7 +7,6 @@ import pytest
 import tenacity
 import yaml
 from charmed_kubeflow_chisme.testing import (
-    CharmSpec,
     assert_path_reachable_through_ingress,
     assert_security_context,
     generate_container_securitycontext_map,
