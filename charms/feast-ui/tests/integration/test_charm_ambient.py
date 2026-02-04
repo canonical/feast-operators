@@ -154,11 +154,10 @@ def test_ambient_mesh_and_ingress_setup(juju: jubilant.Juju):
         )
         juju.wait(lambda status: status.apps[charm.charm].is_active)
 
-    # integrating all charms with the service mesh:
+    # integrating charms with the service mesh:
     for charm in (
         ADMISSION_WEBHOOK,
         CHARM_NAME,
-        *FEAST_DBS_NAMES,
         FEAST_INTEGRATOR,
         METACONTROLLER,
         RESOURCE_DISPATCHER,
