@@ -170,11 +170,11 @@ def test_ambient_mesh_and_ingress_setup(juju: jubilant.Juju):
     juju.wait(lambda status: status.apps[CHARM_NAME].is_active)
 
 
-def get_ingress_url(lightkube_client: lightkube.Client, model_name: str) -> str:
+def get_ingress_url(k8s_client, model_name: str) -> str:
     """Return external ingress URL for the Istio Gateway."""
     ingress_service_name = "istio-ingress-k8s-istio"
 
-    ingress_service = lightkube_client.get(
+    ingress_service = k8s_client.get(
         lightkube.resources.core_v1.Service, name=ingress_service_name, namespace=model_name
     )
 
@@ -185,7 +185,7 @@ def get_ingress_url(lightkube_client: lightkube.Client, model_name: str) -> str:
     return f"http://{ingress_service.status.loadBalancer.ingress[0].ip}"
 
 
-def test_feast_ui_ingress_accessible(juju: jubilant.Juju):
+def test_feast_ui_ingress_accessible(lightkube_client: lightkube.Client, juju: jubilant.Juju):
     """Ensure that Feast UI is reachable through the Ingress."""
     ingress_url = get_ingress_url(lightkube_client, juju.model)
     feast_url = f"{ingress_url}{HTTP_PATH}"
