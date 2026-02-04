@@ -154,22 +154,13 @@ def test_ambient_mesh_and_ingress_setup(juju: jubilant.Juju):
         )
         juju.wait(lambda status: status.apps[charm.charm].is_active)
 
-    # integrating charms with the service mesh:
-    for charm in (
-        ADMISSION_WEBHOOK,
-        CHARM_NAME,
-        FEAST_INTEGRATOR,
-        METACONTROLLER,
-        RESOURCE_DISPATCHER,
-    ):
-        if isinstance(charm, CharmSpec):
-            charm = charm.charm
-        juju.integrate(
-            f"{ISTIO_BEACON_K8S.charm}:{SERVICE_MESH_ENDPOINT}",
-            f"{charm}:{SERVICE_MESH_ENDPOINT}",
-        )
-    logger.info("Waiting for all charms to be active after entering the service mesh...")
-    juju.wait(jubilant.all_active, successes=1)
+    # integrating the UI with the service mesh:
+    juju.integrate(
+        f"{ISTIO_BEACON_K8S.charm}:{SERVICE_MESH_ENDPOINT}",
+        f"{CHARM_NAME}:{SERVICE_MESH_ENDPOINT}",
+    )
+    logger.info("Waiting for the UI to be active after entering the service mesh...")
+    juju.wait(lambda status: status.apps[CHARM_NAME].is_active)
 
     # integrating the UI with the ingress:
     juju.integrate(
