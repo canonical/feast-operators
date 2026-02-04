@@ -16,6 +16,9 @@ from charmed_kubeflow_chisme.testing import (
 from charms_dependencies import (
     ADMISSION_WEBHOOK,
     FEAST_INTEGRATOR,
+    ISTIO_BEACON_K8S,
+    ISTIO_INGRESS_K8S,
+    ISTIO_K8S,
     METACONTROLLER,
     OFFLINE_STORE,
     ONLINE_STORE,
@@ -31,9 +34,6 @@ IMAGE = METADATA["resources"]["oci-image"]["upstream-source"]
 CONTAINERS_SECURITY_CONTEXT_MAP = generate_container_securitycontext_map(METADATA)
 FEAST_DBS_NAMES = ["offline-store", "online-store", "registry"]
 HTTP_PATH = "/feast/"
-ISTIO_BEACON_K8S_APP = "istio-beacon-k8s"
-ISTIO_INGRESS_K8S_APP = "istio-ingress-k8s"
-ISTIO_K8S_APP = "istio-k8s"
 ISTIO_INGRESS_ROUTE_ENDPOINT = "istio-ingress-route"
 RETRY_FOR_THREE_MINUTES = tenacity.Retrying(
     wait=tenacity.wait_exponential(multiplier=1, min=1, max=15),
@@ -145,12 +145,12 @@ def test_deploy_charm(juju: jubilant.Juju, request: pytest.FixtureRequest):
 def test_ambient_mesh_and_ingress_setup(juju: jubilant.Juju):
     """Deploy Istio in ambient mode and integrate it with all charms and for the UI's ingress."""
     # integrating charms that provide the ambient-mode service mesh and the ingress:
-    for charm in (ISTIO_K8S_APP, ISTIO_BEACON_K8S_APP, ISTIO_INGRESS_K8S_APP):
+    for charm in (ISTIO_K8S, ISTIO_BEACON_K8S, ISTIO_INGRESS_K8S):
         juju.deploy(
-            charm=ISTIO_K8S_APP,
-            channel="2/edge",
-            config={"platform": ""} if charm == ISTIO_K8S_APP else None,
-            trust=True,
+            charm=charm.charm,
+            channel=charm.channel,
+            config=charm.config,
+            trust=charm.trust,
         )
 
     # integrating all charms with the service mesh:
@@ -165,7 +165,7 @@ def test_ambient_mesh_and_ingress_setup(juju: jubilant.Juju):
         if isinstance(charm, CharmSpec):
             charm = charm.charm
         juju.integrate(
-            f"{ISTIO_BEACON_K8S_APP}:{SERVICE_MESH_ENDPOINT}",
+            f"{ISTIO_BEACON_K8S.charm}:{SERVICE_MESH_ENDPOINT}",
             f"{charm}:{SERVICE_MESH_ENDPOINT}",
         )
     logger.info("Waiting for all charms to be active after entering the service mesh...")
@@ -173,7 +173,7 @@ def test_ambient_mesh_and_ingress_setup(juju: jubilant.Juju):
 
     # integrating the UI with the ingress:
     juju.integrate(
-        f"{ISTIO_INGRESS_K8S_APP}:{ISTIO_INGRESS_ROUTE_ENDPOINT}",
+        f"{ISTIO_INGRESS_K8S.charm}:{ISTIO_INGRESS_ROUTE_ENDPOINT}",
         f"{CHARM_NAME}:{ISTIO_INGRESS_ROUTE_ENDPOINT}",
     )
     logger.info("Waiting for the UI to be active after integrating it with the ingress...")
