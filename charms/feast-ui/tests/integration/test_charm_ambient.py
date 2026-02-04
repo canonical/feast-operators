@@ -189,7 +189,6 @@ def get_ingress_url(lightkube_client: lightkube.Client, model_name: str) -> str:
 
 def test_feast_ui_ingress_accessible(juju: jubilant.Juju):
     """Ensure that Feast UI is reachable through the Ingress."""
-
     ingress_url = get_ingress_url(lightkube_client, juju.model)
     feast_url = f"{ingress_url}{HTTP_PATH}"
 
