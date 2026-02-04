@@ -175,14 +175,12 @@ def get_ingress_url(lightkube_client: lightkube.Client, model_name: str) -> str:
     ingress_service_name = "istio-ingress-k8s-istio"
 
     ingress_service = lightkube_client.get(
-        lightkube.resources.core_v1.Service,
-        name=ingress_service_name,
-        namespace=model_name
+        lightkube.resources.core_v1.Service, name=ingress_service_name, namespace=model_name
     )
 
-    assert (
-        ingress_service.status.loadBalancer.ingress
-    ), f"Service {ingress_service_name} in namespace {model_name} does not have a LoadBalancer IP"
+    assert ingress_service.status.loadBalancer.ingress, (
+        f"Service {ingress_service_name} in namespace {model_name} does not have a LoadBalancer IP"
+    )
 
     return f"http://{ingress_service.status.loadBalancer.ingress[0].ip}"
 
