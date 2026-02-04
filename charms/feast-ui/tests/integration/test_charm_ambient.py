@@ -18,7 +18,6 @@ from charms_dependencies import (
     FEAST_INTEGRATOR,
     ISTIO_BEACON_K8S,
     ISTIO_INGRESS_K8S,
-    ISTIO_K8S,
     METACONTROLLER,
     OFFLINE_STORE,
     ONLINE_STORE,
@@ -145,7 +144,7 @@ def test_deploy_charm(juju: jubilant.Juju, request: pytest.FixtureRequest):
 def test_ambient_mesh_and_ingress_setup(juju: jubilant.Juju):
     """Deploy Istio in ambient mode and integrate it with all charms and for the UI's ingress."""
     # integrating charms that provide the ambient-mode service mesh and the ingress:
-    for charm in (ISTIO_K8S, ISTIO_BEACON_K8S, ISTIO_INGRESS_K8S):
+    for charm in (ISTIO_BEACON_K8S, ISTIO_INGRESS_K8S):
         juju.deploy(
             charm=charm.charm,
             channel=charm.channel,
