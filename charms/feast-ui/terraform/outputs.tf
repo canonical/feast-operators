@@ -13,7 +13,7 @@ output "requires" {
     dashboard_links     = "dashboard-links",
     feast_configuration = "feast-configuration",
     ingress             = "ingress",
-    require_cmr_mesh = "require-cmr-mesh",
-    service_mesh     = "service-mesh",
+    require_cmr_mesh    = "require-cmr-mesh",
+    service_mesh        = "service-mesh",
   }
 }
