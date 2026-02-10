@@ -26,15 +26,12 @@ containers:
     resource: oci-image
     uid: 584792
     gid: 584792
-    mounts:
-    - storage: config
-      location: /home/ubuntu/
 
 resources:
   oci-image:
     type: oci-image
     description: Backing OCI image
-    upstream-source: charmedkubeflow/feast-ui:0.49.0-e65969b
+    upstream-source: docker.io/charmedkubeflow/feast-ui:0.49.0-fb7767e
 
 requires:
   feast-configuration:
@@ -84,8 +81,3 @@ requires:
     interface: kubeflow_dashboard_links
 
 charm-user: non-root
-
-storage:
-  config:
-    type: filesystem
-    minimum-size: 1M

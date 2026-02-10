@@ -6,7 +6,6 @@
 
 import logging
 import tempfile
-from pathlib import Path
 from typing import List
 
 import ops
@@ -35,6 +34,7 @@ logger = logging.getLogger(__name__)
 HTTP_PORT = 8888
 CONTAINER_NAME = "feast-ui"
 SERVICE_NAME = "feast-ui"
+DEST_PATH = "/home/ubuntu/feature_store.yaml"
 RELATION_NAME = "feast-configuration"
 
 DASHBOARD_LINKS = [
@@ -62,11 +62,6 @@ class FeastUICharm(CharmBase):
         )
 
         self.unit.set_ports(ops.Port("tcp", HTTP_PORT))
-
-        # Storage
-        _container_meta = self.meta.containers[CONTAINER_NAME]
-        _storage_name = next(iter(_container_meta.mounts))
-        self._storage_path = Path(_container_meta.mounts[_storage_name].location)
 
         self.charm_reconciler = CharmReconciler(self)
 
@@ -129,12 +124,7 @@ class FeastUICharm(CharmBase):
             f.write(yaml_data)
             path = f.name
 
-        return [
-            ContainerFileTemplate(
-                source_template_path=path,
-                destination_path=self._storage_path / "feature_store.yaml",
-            )
-        ]
+        return [ContainerFileTemplate(source_template_path=path, destination_path=DEST_PATH)]
 
 
 if __name__ == "__main__":  # pragma: nocover
