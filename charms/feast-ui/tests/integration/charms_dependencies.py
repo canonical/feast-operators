@@ -17,6 +17,7 @@ METACONTROLLER = CharmSpec(charm="metacontroller-operator", channel="4.11/edge",
 RESOURCE_DISPATCHER = CharmSpec(charm="resource-dispatcher", channel="2.0/edge", trust=True)
 ADMISSION_WEBHOOK = CharmSpec(charm="admission-webhook", channel="1.10/edge", trust=True)
 
+# for Istio in sidecar mode:
 ISTIO_GATEWAY = CharmSpec(
     charm="istio-gateway", channel="1.28/edge", trust=True, config={"kind": "ingress"}
 )
@@ -26,3 +27,8 @@ ISTIO_PILOT = CharmSpec(
     trust=True,
     config={"default-gateway": "istio-gateway"},
 )
+
+# for Istio in ambient mode:
+ISTIO_BEACON_K8S = CharmSpec(charm="istio-beacon-k8s", channel="2/edge", trust=True)
+ISTIO_INGRESS_K8S = CharmSpec(charm="istio-ingress-k8s", channel="2/edge", trust=True)
+ISTIO_K8S = CharmSpec(charm="istio-k8s", channel="2/edge", trust=True, config={"platform": ""})
