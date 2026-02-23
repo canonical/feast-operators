@@ -143,6 +143,9 @@ jobs:
             test-type: integration-ambient
 
     steps:
+      - name: Maximise GH runner space
+      uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be
+
       - name: Check out code
         uses: actions/checkout@v4
 
