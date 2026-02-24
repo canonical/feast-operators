@@ -128,7 +128,7 @@ jobs:
       path-to-charm-directory: ${{ matrix.charm }}
     
   integration:
-    name: Integration tests (microk8s)
+    name: Integration tests (Canonical K8s)
     needs: build
     runs-on: ubuntu-24.04
     strategy:
@@ -143,17 +143,28 @@ jobs:
             test-type: integration-ambient
 
     steps:
+      - name: Maximise GH runner space
+        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be
+
       - name: Check out code
         uses: actions/checkout@v4
-          
-      - name: Setup operator environment
-        uses: charmed-kubernetes/actions-operator@main
-        with:
-          provider: microk8s
-          channel: 1.32-strict/stable
-          juju-channel: 3.6/stable
-          microk8s-addons: dns hostpath-storage ingress metallb:10.64.140.43-10.64.140.49
 
+      - name: Install dependencies
+        run: pipx install tox
+
+      - name: Setup environment
+        run: |
+          sudo apt-get remove -y docker-ce docker-ce-cli containerd.io
+          sudo rm -rf /run/containerd
+          sudo snap install concierge --classic
+          sudo concierge prepare --trace
+
+      - name: Configure Cilium for Istio
+        run: |
+          # for context, see https://docs.cilium.io/en/stable/network/servicemesh/istio/
+          kubectl -n kube-system patch configmap cilium-config --type merge --patch '{"data":{"bpf-lb-sock-hostns-only":"true"}}'
+          kubectl -n kube-system patch configmap cilium-config --type merge --patch '{"data":{"cni-exclusive":"false"}}'
+          kubectl -n kube-system rollout restart daemonset cilium
 
       - name: Download packed charm(s)
         id: download-charms
