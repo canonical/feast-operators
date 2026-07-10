@@ -23,6 +23,7 @@ from charms_dependencies import (
     REGISTRY,
     RESOURCE_DISPATCHER,
 )
+from lightkube.generic_resource import create_namespaced_resource
 from requests import get
 
 logger = logging.getLogger(__name__)
@@ -40,6 +41,20 @@ RETRY_FOR_THREE_MINUTES = tenacity.Retrying(
     reraise=True,
 )
 SERVICE_MESH_ENDPOINT = "service-mesh"
+
+# A second istio-ingress-k8s instance used to verify multiple-ingress support.
+SECOND_INGRESS_APP = "istio-ingress-k8s-alt"
+# Name of the HTTPRoute submitted by feast-ui (see AmbientIngressRequirerComponent).
+INGRESS_ROUTE_NAME = "http-route"
+# Gateway listener section for cleartext HTTP on port 80.
+HTTP_SECTION_NAME = "http-80"
+# Gateway API generic resources, resolved at runtime via lightkube.
+HTTPROUTE_RESOURCE = create_namespaced_resource(
+    "gateway.networking.k8s.io", "v1", "HTTPRoute", "httproutes"
+)
+GATEWAY_RESOURCE = create_namespaced_resource(
+    "gateway.networking.k8s.io", "v1", "Gateway", "gateways"
+)
 
 
 def charm_path_from_root(charm_dir_name: str) -> Path:
@@ -187,6 +202,86 @@ def get_ingress_url(k8s_client, model_name: str) -> str:
 
 def test_feast_ui_ingress_accessible(lightkube_client: lightkube.Client, juju: jubilant.Juju):
     """Ensure that Feast UI is reachable through the Ingress."""
+    ingress_url = get_ingress_url(lightkube_client, juju.model)
+    feast_url = f"{ingress_url}{HTTP_PATH}"
+
+    for attempt in RETRY_FOR_THREE_MINUTES:
+        with attempt:
+            response = get(feast_url, timeout=10)
+            assert response.status_code == 200, f"Expected 200 OK, got {response.status_code}"
+            assert "Feast" in response.text or len(response.text) > 0, "Expected Feast UI content"
+
+
+def test_deploy_and_relate_second_ingress(juju: jubilant.Juju):
+    """Deploy a second istio-ingress-k8s and relate it to feast-ui.
+
+    feast-ui must accept more than one istio-ingress-route relation without erroring,
+    so it should remain active after the second ingress is related.
+    """
+    juju.deploy(
+        charm=ISTIO_INGRESS_K8S.charm,
+        app=SECOND_INGRESS_APP,
+        channel=ISTIO_INGRESS_K8S.channel,
+        trust=ISTIO_INGRESS_K8S.trust,
+    )
+    logger.info(f"Waiting for {SECOND_INGRESS_APP} to be active..")
+    juju.wait(lambda status: status.apps[SECOND_INGRESS_APP].is_active)
+
+    juju.integrate(
+        f"{SECOND_INGRESS_APP}:{ISTIO_INGRESS_ROUTE_ENDPOINT}",
+        f"{CHARM_NAME}:{ISTIO_INGRESS_ROUTE_ENDPOINT}",
+    )
+    logger.info("Waiting for the UI to be active after relating the second ingress...")
+    juju.wait(
+        lambda status: status.apps[CHARM_NAME].is_active
+        and status.apps[SECOND_INGRESS_APP].is_active
+    )
+
+
+def test_httproute_attached_to_second_gateway(
+    lightkube_client: lightkube.Client, juju: jubilant.Juju
+):
+    """Verify the HTTPRoute for the second ingress is created and bound to its Gateway.
+
+    The istio-ingress-k8s charm names each route
+    ``{source_app}-{route_name}-httproute-{section}-{ingress_app}`` and binds it to a
+    Gateway named after the ingress application via ``parentRefs``. We assert that the
+    route created for the second ingress is attached to the *second* Gateway (not the
+    first) and routes the feast path to the feast-ui backend.
+    """
+    namespace = juju.model
+
+    expected_route_name = (
+        f"{CHARM_NAME}-{INGRESS_ROUTE_NAME}-httproute-{HTTP_SECTION_NAME}-{SECOND_INGRESS_APP}"
+    )
+
+    # The second Gateway should exist, named after the second ingress application.
+    lightkube_client.get(GATEWAY_RESOURCE, name=SECOND_INGRESS_APP, namespace=namespace)
+
+    # Retry to give the ingress charm time to reconcile the HTTPRoute resources.
+    httproute = None
+    for attempt in RETRY_FOR_THREE_MINUTES:
+        with attempt:
+            httproute = lightkube_client.get(
+                HTTPROUTE_RESOURCE, name=expected_route_name, namespace=namespace
+            )
+
+    parent_refs = httproute.spec["parentRefs"]
+    assert len(parent_refs) == 1
+    # The route must be attached to the SECOND gateway, not the first.
+    assert parent_refs[0]["name"] == SECOND_INGRESS_APP
+    assert parent_refs[0]["sectionName"] == HTTP_SECTION_NAME
+
+    # And it must route the feast path to the feast-ui backend.
+    rule = httproute.spec["rules"][0]
+    assert rule["matches"][0]["path"]["value"] == HTTP_PATH
+    assert rule["backendRefs"][0]["name"] == CHARM_NAME
+
+
+def test_feast_ui_ingress_accessible_after_second_ingress(
+    lightkube_client: lightkube.Client, juju: jubilant.Juju
+):
+    """Ensure Feast UI is still reachable through the ingress after adding a second ingress."""
     ingress_url = get_ingress_url(lightkube_client, juju.model)
     feast_url = f"{ingress_url}{HTTP_PATH}"
 
