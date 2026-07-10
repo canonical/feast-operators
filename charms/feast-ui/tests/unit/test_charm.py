@@ -5,6 +5,7 @@ import ops
 import pytest
 import yaml
 from charmed_kubeflow_chisme.exceptions import ErrorWithStatus
+from charms.istio_ingress_k8s.v0.istio_ingress_route import ProtocolType
 from ops.model import ActiveStatus, BlockedStatus, WaitingStatus
 from ops.testing import Container, Context, State
 
@@ -269,3 +270,43 @@ def test_ambient_mode_ingress_configurations(
 
             else:
                 ingress_submit_config.assert_not_called()
+
+
+@patch(
+    "components.store_configuration_reciver_component.StoreConfigurationReceiverComponent"
+    ".get_feature_store_yaml",
+    return_value=MOCKED_VALID_FEATURE_STORE_CONFIGURATIONS,
+)
+@pytest.mark.parametrize(
+    "tls_enabled, expected_port", [(False, 80), (True, 443)], ids=["no-tls", "tls"]
+)
+def test_ambient_mode_ingress_listener_port(mock_get_yaml, ctx, tls_enabled, expected_port):
+    """Test the ambient ingress listener uses port 443 when TLS is enabled, else 80."""
+    state_in = State(
+        leader=True,
+        relations=[
+            ops.testing.Relation(
+                endpoint=RELATION_ENDPOINT_FOR_FEAST_CONFIGURATIONS,
+                interface=RELATION_INTERFACE_FOR_FEAST_CONFIGURATIONS,
+            ),
+            ops.testing.Relation(
+                endpoint=RELATION_ENDPOINT_FOR_INGRESS_IN_AMBIENT_MODE,
+                interface=RELATION_INTERFACE_FOR_INGRESS_IN_AMBIENT_MODE,
+            ),
+        ],
+        containers=[Container(name="feast-ui", can_connect=True)],
+    )
+    with ctx(ctx.on.install(), state_in) as manager:  # to access the charm, necessary for mocking
+        charm = manager.charm
+        with patch.object(charm, "ambient_mode_ingress") as mocked_ingress:
+            mocked_ingress.is_ready.return_value = True
+            mocked_ingress.tls_enabled = tls_enabled
+
+            manager.run()
+
+            ingress_submit_config = mocked_ingress.submit_config
+            ingress_submit_config.assert_called_once()
+            submitted_ingress_configurations = ingress_submit_config.call_args.args[0]
+            assert len(submitted_ingress_configurations.listeners) == 1
+            assert submitted_ingress_configurations.listeners[0].port == expected_port
+            assert submitted_ingress_configurations.listeners[0].protocol == ProtocolType.HTTP
