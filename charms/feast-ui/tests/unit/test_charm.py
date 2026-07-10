@@ -5,7 +5,11 @@ import ops
 import pytest
 import yaml
 from charmed_kubeflow_chisme.exceptions import ErrorWithStatus
-from charms.istio_ingress_k8s.v0.istio_ingress_route import ProtocolType
+from charms.istio_ingress_k8s.v0.istio_ingress_route import (
+    HTTPPathMatchType,
+    IstioIngressRouteConfig,
+    ProtocolType,
+)
 from ops.model import ActiveStatus, BlockedStatus, WaitingStatus
 from ops.testing import Container, Context, State
 
@@ -310,3 +314,86 @@ def test_ambient_mode_ingress_listener_port(mock_get_yaml, ctx, tls_enabled, exp
             assert len(submitted_ingress_configurations.listeners) == 1
             assert submitted_ingress_configurations.listeners[0].port == expected_port
             assert submitted_ingress_configurations.listeners[0].protocol == ProtocolType.HTTP
+
+
+@patch(
+    "components.store_configuration_reciver_component.StoreConfigurationReceiverComponent"
+    ".get_feature_store_yaml",
+    return_value=MOCKED_VALID_FEATURE_STORE_CONFIGURATIONS,
+)
+def test_multiple_istio_ingress_route_relations(mock_get_yaml, ctx):
+    """Test that multiple istio-ingress-route relations do not block the charm."""
+    state_in = State(
+        leader=True,
+        relations=[
+            ops.testing.Relation(
+                endpoint=RELATION_ENDPOINT_FOR_FEAST_CONFIGURATIONS,
+                interface=RELATION_INTERFACE_FOR_FEAST_CONFIGURATIONS,
+            ),
+            ops.testing.Relation(
+                endpoint=RELATION_ENDPOINT_FOR_INGRESS_IN_AMBIENT_MODE,
+                interface=RELATION_INTERFACE_FOR_INGRESS_IN_AMBIENT_MODE,
+            ),
+            ops.testing.Relation(
+                endpoint=RELATION_ENDPOINT_FOR_INGRESS_IN_AMBIENT_MODE,
+                interface=RELATION_INTERFACE_FOR_INGRESS_IN_AMBIENT_MODE,
+            ),
+        ],
+        containers=[Container(name="feast-ui", can_connect=True)],
+    )
+
+    # Reconciling the charm while more than one istio-ingress-route relation is
+    # present must not raise (e.g. TooManyRelatedAppsError) nor block the charm.
+    state_out = ctx.run(ctx.on.install(), state_in)
+
+    assert state_out.unit_status == ActiveStatus()
+
+
+@patch(
+    "components.store_configuration_reciver_component.StoreConfigurationReceiverComponent"
+    ".get_feature_store_yaml",
+    return_value=MOCKED_VALID_FEATURE_STORE_CONFIGURATIONS,
+)
+def test_each_istio_ingress_route_relation_receives_config(mock_get_yaml, ctx):
+    """Test that every istio-ingress-route relation databag receives a valid config."""
+    state_in = State(
+        leader=True,
+        relations=[
+            ops.testing.Relation(
+                endpoint=RELATION_ENDPOINT_FOR_FEAST_CONFIGURATIONS,
+                interface=RELATION_INTERFACE_FOR_FEAST_CONFIGURATIONS,
+            ),
+            ops.testing.Relation(
+                endpoint=RELATION_ENDPOINT_FOR_INGRESS_IN_AMBIENT_MODE,
+                interface=RELATION_INTERFACE_FOR_INGRESS_IN_AMBIENT_MODE,
+            ),
+            ops.testing.Relation(
+                endpoint=RELATION_ENDPOINT_FOR_INGRESS_IN_AMBIENT_MODE,
+                interface=RELATION_INTERFACE_FOR_INGRESS_IN_AMBIENT_MODE,
+            ),
+        ],
+        containers=[Container(name="feast-ui", can_connect=True)],
+    )
+
+    # The real requirer publishes the same config to every istio-ingress-route
+    # relation, so all related ingress providers are (re)configured at once.
+    state_out = ctx.run(ctx.on.install(), state_in)
+
+    ambient_relations_out = [
+        relation
+        for relation in state_out.relations
+        if relation.endpoint == RELATION_ENDPOINT_FOR_INGRESS_IN_AMBIENT_MODE
+    ]
+    assert len(ambient_relations_out) == 2
+
+    for relation in ambient_relations_out:
+        assert "config" in relation.local_app_data
+        config = IstioIngressRouteConfig.model_validate_json(relation.local_app_data["config"])
+
+        assert len(config.http_routes) == 1
+        http_route = config.http_routes[0]
+        assert http_route.matches[0].path.type == HTTPPathMatchType.PathPrefix
+        assert http_route.matches[0].path.value == EXPECTED_INGRESS_PATH_MATCHED_PREFIX
+        assert http_route.backends[0].service == METADATA["name"]
+        assert http_route.backends[0].port == EXPECTED_K8S_SERVICE_HTTP_PORT
+        assert http_route.listener.name == "http-80"

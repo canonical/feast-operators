@@ -26,10 +26,12 @@ class IstioRelationsConflictDetectorComponent(Component):
 
     def get_status(self) -> StatusBase:  # noqa: D102
         """Check that ambient and sidecar relations are not present simultaneously."""
-        ambient_relation = self._charm.model.get_relation(self.ambient_relation_name)
-        sidecar_relation = self._charm.model.get_relation(self.sidecar_relation_name)
+        # NOTE: use `relations` (a list) rather than `get_relation`, which raises
+        # TooManyRelatedAppsError when more than one relation is present on an endpoint.
+        ambient_relations = self._charm.model.relations[self.ambient_relation_name]
+        sidecar_relations = self._charm.model.relations[self.sidecar_relation_name]
 
-        if ambient_relation and sidecar_relation:
+        if ambient_relations and sidecar_relations:
             logger.error(
                 f"Both '{self.ambient_relation_name}' and '{self.sidecar_relation_name}' "
                 "relations are present, remove one to unblock."
