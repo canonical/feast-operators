@@ -31,7 +31,7 @@ resources:
   oci-image:
     type: oci-image
     description: Backing OCI image
-    upstream-source: docker.io/charmedkubeflow/feast-ui:0.49.0-fb7767e
+    upstream-source: docker.io/charmedkubeflow/feast-ui:0.49.0-fb7767e-20260901030850
 
 provides:
   provide-cmr-mesh:
